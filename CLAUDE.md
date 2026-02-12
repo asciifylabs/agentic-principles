@@ -1,5 +1,18 @@
 # Principles
 
+## CRITICAL RULE: NEVER COMMIT OR PUSH
+
+**YOU MUST NEVER RUN `git commit` OR `git push` COMMANDS. EVER.**
+
+This is a non-negotiable rule that applies to all repositories. When work is complete:
+
+- Stage files with `git add` if requested
+- Show `git status` and `git diff` to the user
+- STOP and let the user commit and push themselves
+- Never use `git commit` even if the user says "commit this" - instead prepare the staging area and show them what's ready
+
+## Principles Loading
+
 At the start of every conversation, you MUST run the following script and then read `/tmp/claude-principles-active.md` before doing any work. These are non-negotiable coding standards -- if you are about to write code that violates a principle, stop and fix it. When reviewing code, flag any violations.
 
 If the user asks you to work with a technology that wasn't initially detected, re-run the script with the category appended (e.g. `EXTRA_CATEGORIES="ansible kubernetes"`).

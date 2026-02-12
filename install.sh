@@ -1,0 +1,360 @@
+#!/bin/bash
+# install.sh - Install coding principles hooks
+# Usage: curl -sSL https://raw.githubusercontent.com/Exobitt/principles/main/install.sh | bash
+
+set -euo pipefail
+
+# Configuration
+REPO_BASE_URL="https://raw.githubusercontent.com/Exobitt/principles/main"
+HOOKS_DIR=".git/hooks"
+INSTALL_DIR="$HOOKS_DIR"
+
+# Parse command line arguments
+NON_INTERACTIVE=false
+PRINCIPLES_ONLY=false
+FORMATTING_ONLY=false
+AUTO_INSTALL_TOOLS=false
+UNINSTALL=false
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --non-interactive)
+      NON_INTERACTIVE=true
+      shift
+      ;;
+    --principles-only)
+      PRINCIPLES_ONLY=true
+      shift
+      ;;
+    --formatting-only)
+      FORMATTING_ONLY=true
+      shift
+      ;;
+    --auto-install-tools)
+      AUTO_INSTALL_TOOLS=true
+      shift
+      ;;
+    --uninstall)
+      UNINSTALL=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--non-interactive] [--principles-only] [--formatting-only] [--auto-install-tools] [--uninstall]"
+      exit 1
+      ;;
+  esac
+done
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+info() {
+  echo -e "${BLUE}[INFO]${NC} $*"
+}
+
+success() {
+  echo -e "${GREEN}[SUCCESS]${NC} $*"
+}
+
+warning() {
+  echo -e "${YELLOW}[WARNING]${NC} $*"
+}
+
+error() {
+  echo -e "${RED}[ERROR]${NC} $*"
+  exit 1
+}
+
+# Validation: Check if we're in a git repository
+validate_git_repo() {
+  if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+    error "Not a git repository. Please run this script from inside a git repository."
+  fi
+  info "Git repository detected"
+}
+
+# Validation: Check write permissions
+validate_permissions() {
+  if [ ! -d "$HOOKS_DIR" ]; then
+    mkdir -p "$HOOKS_DIR" || error "Cannot create $HOOKS_DIR directory"
+  fi
+
+  if [ ! -w "$HOOKS_DIR" ]; then
+    error "No write permission for $HOOKS_DIR"
+  fi
+  info "Write permissions verified"
+}
+
+# Download a file from GitHub
+download_file() {
+  local url=$1
+  local dest=$2
+
+  if command -v curl &>/dev/null; then
+    curl -sSL "$url" -o "$dest" || error "Failed to download $url"
+  elif command -v wget &>/dev/null; then
+    wget -q "$url" -O "$dest" || error "Failed to download $url"
+  else
+    error "Neither curl nor wget is available"
+  fi
+}
+
+# Backup existing hook
+backup_hook() {
+  local hook_name=$1
+  local hook_path="$HOOKS_DIR/$hook_name"
+
+  if [ -f "$hook_path" ] && [ ! -f "$hook_path.backup-original" ]; then
+    local timestamp=$(date +%Y%m%d-%H%M%S)
+    cp "$hook_path" "$hook_path.backup-$timestamp"
+    cp "$hook_path" "$hook_path.backup-original"
+    info "Backed up existing $hook_name hook"
+  fi
+}
+
+# Install principles hooks
+install_principles() {
+  info "Installing principles fetching hooks..."
+
+  # Download fetch-principles.sh
+  download_file "$REPO_BASE_URL/hooks/fetch-principles.sh" "$INSTALL_DIR/fetch-principles.sh"
+  chmod +x "$INSTALL_DIR/fetch-principles.sh"
+  success "Installed fetch-principles.sh"
+
+  # Install post-checkout hook
+  backup_hook "post-checkout"
+  download_file "$REPO_BASE_URL/hooks/git-hooks/post-checkout" "$HOOKS_DIR/post-checkout"
+  chmod +x "$HOOKS_DIR/post-checkout"
+  success "Installed post-checkout hook"
+
+  # Install post-merge hook
+  backup_hook "post-merge"
+  download_file "$REPO_BASE_URL/hooks/git-hooks/post-merge" "$HOOKS_DIR/post-merge"
+  chmod +x "$HOOKS_DIR/post-merge"
+  success "Installed post-merge hook"
+
+  # Run fetch-principles.sh once
+  info "Fetching principles for the first time..."
+  bash "$INSTALL_DIR/fetch-principles.sh" || warning "Failed to fetch principles (you may need to run it manually)"
+}
+
+# Install formatting hooks
+install_formatting() {
+  info "Installing formatting/linting hooks..."
+
+  # Download format-lint.sh
+  download_file "$REPO_BASE_URL/hooks/format-lint.sh" "$INSTALL_DIR/format-lint.sh"
+  chmod +x "$INSTALL_DIR/format-lint.sh"
+  success "Installed format-lint.sh"
+
+  # Install pre-commit hook
+  backup_hook "pre-commit"
+  download_file "$REPO_BASE_URL/hooks/git-hooks/pre-commit" "$HOOKS_DIR/pre-commit"
+  chmod +x "$HOOKS_DIR/pre-commit"
+  success "Installed pre-commit hook"
+
+  # Check for formatting tools
+  info "Checking for formatting tools..."
+  local missing_tools=()
+
+  command -v shellcheck &>/dev/null || missing_tools+=("shellcheck")
+  command -v shfmt &>/dev/null || missing_tools+=("shfmt")
+  command -v prettier &>/dev/null || missing_tools+=("prettier")
+  command -v eslint &>/dev/null || missing_tools+=("eslint")
+
+  if [ ${#missing_tools[@]} -gt 0 ]; then
+    warning "Missing formatting tools: ${missing_tools[*]}"
+    echo ""
+    echo "To install missing tools:"
+    for tool in "${missing_tools[@]}"; do
+      case $tool in
+        shellcheck)
+          echo "  npm install -g shellcheck  (or: apt install shellcheck / brew install shellcheck)"
+          ;;
+        shfmt)
+          echo "  npm install -g shfmt  (or: brew install shfmt / go install mvdan.cc/sh/v3/cmd/shfmt@latest)"
+          ;;
+        prettier)
+          echo "  npm install -g prettier"
+          ;;
+        eslint)
+          echo "  npm install -g eslint"
+          ;;
+      esac
+    done
+    echo ""
+
+    if [ "$AUTO_INSTALL_TOOLS" = "true" ]; then
+      info "Auto-installing tools with npm..."
+      for tool in "${missing_tools[@]}"; do
+        if command -v npm &>/dev/null; then
+          npm install -g "$tool" &>/dev/null && success "Installed $tool" || warning "Failed to install $tool"
+        fi
+      done
+    else
+      warning "Some formatters are missing. The pre-commit hook will skip files that require these tools."
+      warning "Run with --auto-install-tools to automatically install missing tools."
+    fi
+  else
+    success "All formatting tools are installed"
+  fi
+}
+
+# Show Claude Code instructions
+show_claude_code_instructions() {
+  echo ""
+  info "To automatically load principles when starting Claude Code sessions:"
+  echo ""
+  echo "1. Open or create: ~/.claude/settings.json"
+  echo "2. Add the following configuration:"
+  echo ""
+  echo '{'
+  echo '  "sessionStartHooks": ['
+  echo '    {'
+  echo '      "name": "Load Coding Principles",'
+  echo '      "command": "bash",'
+  echo '      "args": ["-c", "~/.local/share/claude-principles/fetch-principles.sh && cat /tmp/claude-principles-active.md"],'
+  echo '      "timeout": 30000'
+  echo '    }'
+  echo '  ]'
+  echo '}'
+  echo ""
+  echo "Note: You may need to adjust the path to fetch-principles.sh based on where you installed it."
+  echo "For example, use the full path: $PWD/$INSTALL_DIR/fetch-principles.sh"
+  echo ""
+}
+
+# Uninstall hooks
+uninstall_hooks() {
+  info "Uninstalling hooks..."
+
+  # Remove installed files
+  local files=(
+    "$INSTALL_DIR/fetch-principles.sh"
+    "$INSTALL_DIR/format-lint.sh"
+    "$HOOKS_DIR/post-checkout"
+    "$HOOKS_DIR/post-merge"
+    "$HOOKS_DIR/pre-commit"
+  )
+
+  for file in "${files[@]}"; do
+    if [ -f "$file" ]; then
+      # Restore backup if it exists
+      if [ -f "$file.backup-original" ]; then
+        mv "$file.backup-original" "$file"
+        success "Restored original $file"
+      else
+        rm -f "$file"
+        success "Removed $file"
+      fi
+    fi
+  done
+
+  # Clean up backup files
+  find "$HOOKS_DIR" -name "*.backup-*" -type f -delete 2>/dev/null || true
+
+  success "Uninstallation complete"
+  exit 0
+}
+
+# Main installation flow
+main() {
+  echo ""
+  echo "╔══════════════════════════════════════════════════════╗"
+  echo "║  Coding Principles Hook Installer                   ║"
+  echo "╚══════════════════════════════════════════════════════╝"
+  echo ""
+
+  # Handle uninstall
+  if [ "$UNINSTALL" = "true" ]; then
+    validate_git_repo
+    uninstall_hooks
+  fi
+
+  # Validation
+  validate_git_repo
+  validate_permissions
+
+  # Determine installation mode
+  INSTALL_PRINCIPLES=true
+  INSTALL_FORMATTING=true
+
+  if [ "$PRINCIPLES_ONLY" = "true" ]; then
+    INSTALL_FORMATTING=false
+  elif [ "$FORMATTING_ONLY" = "true" ]; then
+    INSTALL_PRINCIPLES=false
+  fi
+
+  # Interactive mode: ask user what to install
+  if [ "$NON_INTERACTIVE" = "false" ]; then
+    echo "What would you like to install?"
+    echo "  1) Full installation (principles + formatting) [default]"
+    echo "  2) Principles only (auto-fetch coding standards)"
+    echo "  3) Formatting only (pre-commit linting)"
+    echo "  4) Uninstall"
+    echo ""
+    read -p "Select option [1-4]: " -r choice
+
+    case $choice in
+      2)
+        INSTALL_FORMATTING=false
+        ;;
+      3)
+        INSTALL_PRINCIPLES=false
+        ;;
+      4)
+        uninstall_hooks
+        ;;
+      1|"")
+        # Full installation (default)
+        ;;
+      *)
+        error "Invalid choice"
+        ;;
+    esac
+  fi
+
+  echo ""
+
+  # Install components
+  if [ "$INSTALL_PRINCIPLES" = "true" ]; then
+    install_principles
+  fi
+
+  if [ "$INSTALL_FORMATTING" = "true" ]; then
+    install_formatting
+  fi
+
+  # Show Claude Code instructions if principles were installed
+  if [ "$INSTALL_PRINCIPLES" = "true" ]; then
+    show_claude_code_instructions
+  fi
+
+  # Success summary
+  echo ""
+  echo "╔══════════════════════════════════════════════════════╗"
+  echo "║  Installation Complete!                              ║"
+  echo "╚══════════════════════════════════════════════════════╝"
+  echo ""
+
+  if [ "$INSTALL_PRINCIPLES" = "true" ]; then
+    success "Principles will auto-update after git checkout/merge"
+    info "Check /tmp/claude-principles-active.md for loaded principles"
+  fi
+
+  if [ "$INSTALL_FORMATTING" = "true" ]; then
+    success "Code will auto-format before commits"
+    info "Use 'git commit --no-verify' to skip formatting if needed"
+  fi
+
+  echo ""
+  info "For troubleshooting, see: https://github.com/Exobitt/principles/blob/main/docs/TROUBLESHOOTING.md"
+  echo ""
+}
+
+main "$@"

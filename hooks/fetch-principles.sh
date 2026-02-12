@@ -1,0 +1,157 @@
+#!/bin/bash
+# fetch-principles.sh - Fetch and consolidate coding principles
+# This script clones/updates the principles repository and generates
+# a consolidated markdown file with relevant principles based on
+# auto-detected technology categories.
+
+set -euo pipefail
+
+# Configuration with environment overrides
+REPO_DIR="${PRINCIPLES_REPO_DIR:-/tmp/claude-principles-repo}"
+OUTPUT="${PRINCIPLES_OUTPUT:-/tmp/claude-principles-active.md}"
+REPO_SSH="git@github.com:Exobitt/principles.git"
+REPO_HTTPS="https://github.com/Exobitt/principles.git"
+LOCKFILE="/tmp/claude-principles.lock"
+MAX_LOCK_AGE=30
+VERBOSE="${VERBOSE:-false}"
+
+# Logging function
+log() {
+  if [ "$VERBOSE" = "true" ]; then
+    echo "[fetch-principles] $*" >&2
+  fi
+}
+
+error() {
+  echo "[fetch-principles] ERROR: $*" >&2
+}
+
+# Cleanup function
+cleanup() {
+  if [ -f "$LOCKFILE" ]; then
+    rm -f "$LOCKFILE"
+    log "Removed lockfile"
+  fi
+}
+
+trap cleanup EXIT
+
+# Check and handle lockfile
+if [ -f "$LOCKFILE" ]; then
+  lock_age=$(($(date +%s) - $(stat -c %Y "$LOCKFILE" 2>/dev/null || stat -f %m "$LOCKFILE" 2>/dev/null || echo 0)))
+  if [ "$lock_age" -lt "$MAX_LOCK_AGE" ]; then
+    log "Another instance is running (lock age: ${lock_age}s), exiting"
+    exit 0
+  else
+    log "Stale lock detected (age: ${lock_age}s), removing"
+    rm -f "$LOCKFILE"
+  fi
+fi
+
+# Create lockfile
+echo $$ > "$LOCKFILE"
+log "Created lockfile"
+
+# Clone or update repository
+if [ -d "$REPO_DIR/.git" ]; then
+  log "Updating existing repository at $REPO_DIR"
+  if ! git -C "$REPO_DIR" pull --ff-only -q 2>/dev/null; then
+    log "Pull failed, repository may be dirty or offline - using cached version"
+  fi
+else
+  log "Cloning repository to $REPO_DIR"
+  rm -rf "$REPO_DIR"
+  if ! git clone --depth 1 -q "$REPO_SSH" "$REPO_DIR" 2>/dev/null; then
+    log "SSH clone failed, trying HTTPS"
+    if ! git clone --depth 1 -q "$REPO_HTTPS" "$REPO_DIR" 2>/dev/null; then
+      error "Failed to clone principles repository"
+      exit 1
+    fi
+  fi
+  log "Repository cloned successfully"
+fi
+
+# Detect relevant categories from current directory
+CATEGORIES=""
+
+log "Detecting technology categories in $(pwd)"
+
+# Shell: *.sh files
+if find . -maxdepth 3 -name '*.sh' -print -quit 2>/dev/null | grep -q .; then
+  CATEGORIES="$CATEGORIES shell"
+  log "Detected: shell"
+fi
+
+# Terraform: *.tf files
+if find . -maxdepth 3 -name '*.tf' -print -quit 2>/dev/null | grep -q .; then
+  CATEGORIES="$CATEGORIES terraform"
+  log "Detected: terraform"
+fi
+
+# Ansible: ansible.cfg, playbooks/, roles/
+if [ -f ansible.cfg ] || [ -d playbooks ] || [ -d roles ]; then
+  CATEGORIES="$CATEGORIES ansible"
+  log "Detected: ansible"
+fi
+
+# Kubernetes: Chart.yaml, kustomization.yaml, or yaml with apiVersion
+if [ -f Chart.yaml ] || [ -f kustomization.yaml ] || \
+   find . -maxdepth 3 -name '*.yaml' -exec grep -l 'apiVersion:' {} + 2>/dev/null | head -1 | grep -q .; then
+  CATEGORIES="$CATEGORIES kubernetes"
+  log "Detected: kubernetes"
+fi
+
+# Node.js: package.json or *.js/*.ts files
+if [ -f package.json ] || find . -maxdepth 3 \( -name '*.js' -o -name '*.ts' \) -print -quit 2>/dev/null | grep -q .; then
+  CATEGORIES="$CATEGORIES nodejs"
+  log "Detected: nodejs"
+fi
+
+# Append any extra categories passed via env var
+if [ -n "${EXTRA_CATEGORIES:-}" ]; then
+  CATEGORIES="$CATEGORIES ${EXTRA_CATEGORIES}"
+  log "Added extra categories: ${EXTRA_CATEGORIES}"
+fi
+
+# Fallback: if nothing detected, use all
+if [ -z "$(echo "$CATEGORIES" | tr -d ' ')" ]; then
+  CATEGORIES="shell ansible terraform kubernetes nodejs"
+  log "No categories detected, using all"
+fi
+
+# Trim leading/trailing spaces
+CATEGORIES=$(echo "$CATEGORIES" | xargs)
+
+log "Active categories: $CATEGORIES"
+
+# Concatenate relevant principles into a single file
+> "$OUTPUT"
+
+for cat in $CATEGORIES; do
+  dir="$REPO_DIR/$cat"
+  if [ ! -d "$dir" ]; then
+    log "Warning: Category directory not found: $dir"
+    continue
+  fi
+
+  log "Processing category: $cat"
+  echo "# ${cat^^} PRINCIPLES" >> "$OUTPUT"
+  echo "" >> "$OUTPUT"
+
+  for f in "$dir"/*.md; do
+    if [ ! -f "$f" ]; then
+      continue
+    fi
+    log "  Including: $(basename "$f")"
+    cat "$f" >> "$OUTPUT"
+    echo -e "\n---\n" >> "$OUTPUT"
+  done
+done
+
+# Output summary
+line_count=$(wc -l < "$OUTPUT")
+log "Generated $OUTPUT with $line_count lines"
+
+if [ "$VERBOSE" = "false" ]; then
+  echo "Loaded principles: $CATEGORIES"
+fi
