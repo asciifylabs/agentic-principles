@@ -33,13 +33,15 @@ find . -maxdepth 3 -name '*.tf' -print -quit 2>/dev/null | grep -q . && CATEGORI
 { [ -f ansible.cfg ] || [ -d playbooks ] || [ -d roles ]; } && CATEGORIES="$CATEGORIES ansible"
 # Kubernetes: Chart.yaml, kustomization.yaml, or yaml with apiVersion
 { [ -f Chart.yaml ] || [ -f kustomization.yaml ] || find . -maxdepth 3 -name '*.yaml' -exec grep -l 'apiVersion:' {} + 2>/dev/null | head -1 | grep -q .; } && CATEGORIES="$CATEGORIES kubernetes"
+# Node.js: package.json or *.js/*.ts files
+{ [ -f package.json ] || find . -maxdepth 3 \( -name '*.js' -o -name '*.ts' \) -print -quit 2>/dev/null | grep -q .; } && CATEGORIES="$CATEGORIES nodejs"
 
 # Append any extra categories passed via env var
 CATEGORIES="$CATEGORIES ${EXTRA_CATEGORIES:-}"
 
 # Fallback: if nothing detected, use all
 if [ -z "$(echo "$CATEGORIES" | tr -d ' ')" ]; then
-  CATEGORIES="shell ansible terraform kubernetes"
+  CATEGORIES="shell ansible terraform kubernetes nodejs"
 fi
 
 # Concatenate relevant principles into a single file
