@@ -122,19 +122,19 @@ install_principles() {
   info "Installing principles fetching hooks..."
 
   # Download fetch-principles.sh
-  download_file "$REPO_BASE_URL/hooks/fetch-principles.sh" "$INSTALL_DIR/fetch-principles.sh"
+  download_file "$REPO_BASE_URL/.claude/hooks/fetch-principles.sh" "$INSTALL_DIR/fetch-principles.sh"
   chmod +x "$INSTALL_DIR/fetch-principles.sh"
   success "Installed fetch-principles.sh"
 
   # Install post-checkout hook
   backup_hook "post-checkout"
-  download_file "$REPO_BASE_URL/hooks/git-hooks/post-checkout" "$HOOKS_DIR/post-checkout"
+  download_file "$REPO_BASE_URL/.claude/hooks/git-hooks/post-checkout" "$HOOKS_DIR/post-checkout"
   chmod +x "$HOOKS_DIR/post-checkout"
   success "Installed post-checkout hook"
 
   # Install post-merge hook
   backup_hook "post-merge"
-  download_file "$REPO_BASE_URL/hooks/git-hooks/post-merge" "$HOOKS_DIR/post-merge"
+  download_file "$REPO_BASE_URL/.claude/hooks/git-hooks/post-merge" "$HOOKS_DIR/post-merge"
   chmod +x "$HOOKS_DIR/post-merge"
   success "Installed post-merge hook"
 
@@ -148,13 +148,13 @@ install_formatting() {
   info "Installing formatting/linting hooks..."
 
   # Download format-lint.sh
-  download_file "$REPO_BASE_URL/hooks/format-lint.sh" "$INSTALL_DIR/format-lint.sh"
+  download_file "$REPO_BASE_URL/.claude/hooks/format-lint.sh" "$INSTALL_DIR/format-lint.sh"
   chmod +x "$INSTALL_DIR/format-lint.sh"
   success "Installed format-lint.sh"
 
   # Install pre-commit hook
   backup_hook "pre-commit"
-  download_file "$REPO_BASE_URL/hooks/git-hooks/pre-commit" "$HOOKS_DIR/pre-commit"
+  download_file "$REPO_BASE_URL/.claude/hooks/git-hooks/pre-commit" "$HOOKS_DIR/pre-commit"
   chmod +x "$HOOKS_DIR/pre-commit"
   success "Installed pre-commit hook"
 
