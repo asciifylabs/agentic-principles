@@ -48,13 +48,19 @@ find . -maxdepth 3 -name '*.tf' -print -quit 2>/dev/null | grep -q . && CATEGORI
 { [ -f Chart.yaml ] || [ -f kustomization.yaml ] || find . -maxdepth 3 -name '*.yaml' -exec grep -l 'apiVersion:' {} + 2>/dev/null | head -1 | grep -q .; } && CATEGORIES="$CATEGORIES kubernetes"
 # Node.js: package.json or *.js/*.ts files
 { [ -f package.json ] || find . -maxdepth 3 \( -name '*.js' -o -name '*.ts' \) -print -quit 2>/dev/null | grep -q .; } && CATEGORIES="$CATEGORIES nodejs"
+# Python: *.py files, requirements.txt, pyproject.toml, setup.py, or Pipfile
+{ [ -f requirements.txt ] || [ -f pyproject.toml ] || [ -f setup.py ] || [ -f Pipfile ] || find . -maxdepth 3 -name '*.py' -print -quit 2>/dev/null | grep -q .; } && CATEGORIES="$CATEGORIES python"
+# Go: go.mod, go.sum, or *.go files
+{ [ -f go.mod ] || [ -f go.sum ] || find . -maxdepth 3 -name '*.go' -print -quit 2>/dev/null | grep -q .; } && CATEGORIES="$CATEGORIES go"
+# Rust: Cargo.toml, Cargo.lock, or *.rs files
+{ [ -f Cargo.toml ] || [ -f Cargo.lock ] || find . -maxdepth 3 -name '*.rs' -print -quit 2>/dev/null | grep -q .; } && CATEGORIES="$CATEGORIES rust"
 
 # Append any extra categories passed via env var
 CATEGORIES="$CATEGORIES ${EXTRA_CATEGORIES:-}"
 
 # Fallback: if nothing detected, use all
 if [ -z "$(echo "$CATEGORIES" | tr -d ' ')" ]; then
-  CATEGORIES="shell ansible terraform kubernetes nodejs"
+  CATEGORIES="shell ansible terraform kubernetes nodejs python go rust"
 fi
 
 # Concatenate relevant principles into a single file
