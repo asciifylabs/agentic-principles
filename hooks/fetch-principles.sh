@@ -107,6 +107,27 @@ if [ -f package.json ] || find . -maxdepth 3 \( -name '*.js' -o -name '*.ts' \) 
   log "Detected: nodejs"
 fi
 
+# Python: *.py files, requirements.txt, pyproject.toml, setup.py, or Pipfile
+if [ -f requirements.txt ] || [ -f pyproject.toml ] || [ -f setup.py ] || [ -f Pipfile ] || \
+   find . -maxdepth 3 -name '*.py' -print -quit 2>/dev/null | grep -q .; then
+  CATEGORIES="$CATEGORIES python"
+  log "Detected: python"
+fi
+
+# Go: go.mod, go.sum, or *.go files
+if [ -f go.mod ] || [ -f go.sum ] || \
+   find . -maxdepth 3 -name '*.go' -print -quit 2>/dev/null | grep -q .; then
+  CATEGORIES="$CATEGORIES go"
+  log "Detected: go"
+fi
+
+# Rust: Cargo.toml, Cargo.lock, or *.rs files
+if [ -f Cargo.toml ] || [ -f Cargo.lock ] || \
+   find . -maxdepth 3 -name '*.rs' -print -quit 2>/dev/null | grep -q .; then
+  CATEGORIES="$CATEGORIES rust"
+  log "Detected: rust"
+fi
+
 # Append any extra categories passed via env var
 if [ -n "${EXTRA_CATEGORIES:-}" ]; then
   CATEGORIES="$CATEGORIES ${EXTRA_CATEGORIES}"
@@ -115,7 +136,7 @@ fi
 
 # Fallback: if nothing detected, use all
 if [ -z "$(echo "$CATEGORIES" | tr -d ' ')" ]; then
-  CATEGORIES="shell ansible terraform kubernetes nodejs"
+  CATEGORIES="shell ansible terraform kubernetes nodejs python go rust"
   log "No categories detected, using all"
 fi
 

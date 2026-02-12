@@ -67,7 +67,7 @@ To automatically load principles when starting Claude Code sessions:
 }
 ```
 
-See [hooks/claude-code/README.md](hooks/claude-code/README.md) for detailed setup.
+See [.claude/hooks/README.md](.claude/hooks/README.md) for detailed setup.
 
 ### Option 3: Manual Execution (No Hooks)
 
@@ -84,6 +84,9 @@ The hook system automatically detects technologies in your repository:
 - **Ansible**: Detects `ansible.cfg`, `playbooks/`, or `roles/`
 - **Kubernetes**: Detects `Chart.yaml`, `kustomization.yaml`, or manifests
 - **Node.js**: Detects `package.json` or `*.js`/`*.ts` files
+- **Python**: Detects `*.py` files, `requirements.txt`, `pyproject.toml`, or `setup.py`
+- **Go**: Detects `go.mod`, `go.sum`, or `*.go` files
+- **Rust**: Detects `Cargo.toml`, `Cargo.lock`, or `*.rs` files
 
 Detected principles are cached in `/tmp/claude-principles-active.md` for fast access.
 
@@ -322,3 +325,110 @@ For common issues and solutions, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOT
 | 016 | [Use CiliumNetworkPolicies](kubernetes/016-cilium-network-policies.md)                  |
 | 017 | [Configure eBPF for Performance](kubernetes/017-cilium-ebpf-configuration.md)           |
 | 018 | [Enable Bandwidth Manager](kubernetes/018-cilium-bandwidth-manager.md)                  |
+
+## Node.js/JavaScript (`nodejs/`)
+
+| #   | Principle                                                                                  |
+| --- | ------------------------------------------------------------------------------------------ |
+| 001 | [Use Async/Await Over Callbacks](nodejs/001-use-async-await-over-callbacks.md)             |
+| 002 | [Use Environment Variables for Config](nodejs/002-use-environment-variables-for-config.md) |
+| 003 | [Use Proper Error Handling](nodejs/003-use-proper-error-handling.md)                       |
+| 004 | [Use package.json Scripts](nodejs/004-use-package-json-scripts.md)                         |
+| 005 | [Use ESLint and Prettier](nodejs/005-use-eslint-and-prettier.md)                           |
+| 006 | [Use ESM Modules Consistently](nodejs/006-use-esm-modules-consistently.md)                 |
+| 007 | [Lock Dependencies](nodejs/007-lock-dependencies.md)                                       |
+| 008 | [Use Structured Logging](nodejs/008-use-structured-logging.md)                             |
+| 009 | [Validate Inputs](nodejs/009-validate-inputs.md)                                           |
+| 010 | [Use Dependency Injection](nodejs/010-use-dependency-injection.md)                         |
+| 011 | [Handle Promises Properly](nodejs/011-handle-promises-properly.md)                         |
+| 012 | [Use TypeScript for Type Safety](nodejs/012-use-typescript-for-type-safety.md)             |
+| 013 | [Use Security Best Practices](nodejs/013-use-security-best-practices.md)                   |
+| 014 | [Organize Project Structure](nodejs/014-organize-project-structure.md)                     |
+| 015 | [Use Graceful Shutdown](nodejs/015-use-graceful-shutdown.md)                               |
+
+## Python (`python/`)
+
+### General Best Practices
+
+| #   | Principle                                                                          |
+| --- | ---------------------------------------------------------------------------------- |
+| 001 | [Use Type Hints](python/001-use-type-hints.md)                                     |
+| 002 | [Use Context Managers](python/002-use-context-managers.md)                         |
+| 003 | [Follow PEP 8 Style Guide](python/003-follow-pep8-style-guide.md)                  |
+| 004 | [Use Virtual Environments](python/004-use-virtual-environments.md)                 |
+| 005 | [Write Comprehensive Docstrings](python/005-write-comprehensive-docstrings.md)     |
+| 006 | [Handle Exceptions Properly](python/006-handle-exceptions-properly.md)             |
+| 007 | [Use pathlib Over os.path](python/007-use-pathlib-over-os-path.md)                 |
+| 008 | [Use Structured Logging](python/008-use-structured-logging.md)                     |
+| 009 | [Avoid Mutable Default Arguments](python/009-avoid-mutable-default-arguments.md)   |
+| 010 | [Use Comprehensions Appropriately](python/010-use-comprehensions-appropriately.md) |
+| 011 | [Use Dataclasses](python/011-use-dataclasses.md)                                   |
+| 012 | [Use f-strings for Formatting](python/012-use-f-strings-for-formatting.md)         |
+| 013 | [Write Unit Tests with pytest](python/013-write-unit-tests-with-pytest.md)         |
+| 014 | [Use Async/Await for I/O Operations](python/014-use-async-await-for-io.md)         |
+| 015 | [Manage Dependencies Properly](python/015-manage-dependencies-properly.md)         |
+| 016 | [Use Static Type Checking](python/016-use-static-type-checking.md)                 |
+| 017 | [Follow Security Best Practices](python/017-follow-security-best-practices.md)     |
+
+### AI Development
+
+| #   | Principle                                                                                |
+| --- | ---------------------------------------------------------------------------------------- |
+| 018 | [Manage API Keys Securely](python/018-manage-api-keys-securely.md)                       |
+| 019 | [Handle API Rate Limits](python/019-handle-api-rate-limits.md)                           |
+| 020 | [Use Streaming for Large Outputs](python/020-use-streaming-for-large-outputs.md)         |
+| 021 | [Implement Proper Prompt Engineering](python/021-implement-proper-prompt-engineering.md) |
+| 022 | [Use Vector Databases](python/022-use-vector-databases.md)                               |
+| 023 | [Implement Response Caching](python/023-implement-response-caching.md)                   |
+| 024 | [Use Structured Outputs](python/024-use-structured-outputs.md)                           |
+| 025 | [Monitor Token Usage and Costs](python/025-monitor-token-usage-and-costs.md)             |
+
+## Go (`go/`)
+
+| #   | Principle                                                                    |
+| --- | ---------------------------------------------------------------------------- |
+| 001 | [Use Go Modules for Dependencies](go/001-use-go-modules.md)                  |
+| 002 | [Handle Errors Explicitly](go/002-handle-errors-explicitly.md)               |
+| 003 | [Use Interfaces for Abstraction](go/003-use-interfaces-for-abstraction.md)   |
+| 004 | [Follow Effective Go Guidelines](go/004-follow-effective-go.md)              |
+| 005 | [Use gofmt and Linters](go/005-use-gofmt-and-linters.md)                     |
+| 006 | [Write Table-Driven Tests](go/006-write-table-driven-tests.md)               |
+| 007 | [Use Context for Cancellation](go/007-use-context-for-cancellation.md)       |
+| 008 | [Use Channels for Communication](go/008-use-channels-for-communication.md)   |
+| 009 | [Avoid Goroutine Leaks](go/009-avoid-goroutine-leaks.md)                     |
+| 010 | [Use Defer for Cleanup](go/010-use-defer-for-cleanup.md)                     |
+| 011 | [Use Struct Embedding Over Inheritance](go/011-use-struct-embedding.md)      |
+| 012 | [Keep Interfaces Small](go/012-keep-interfaces-small.md)                     |
+| 013 | [Use Standard Library Packages](go/013-use-standard-library.md)              |
+| 014 | [Avoid Package-Level State](go/014-avoid-package-level-state.md)             |
+| 015 | [Use Meaningful Variable Names](go/015-use-meaningful-names.md)              |
+| 016 | [Handle Panics Appropriately](go/016-handle-panics-appropriately.md)         |
+| 017 | [Use Buffered Channels Carefully](go/017-use-buffered-channels-carefully.md) |
+| 018 | [Follow Standard Project Layout](go/018-follow-project-layout.md)            |
+| 019 | [Use Build Tags for Conditional Compilation](go/019-use-build-tags.md)       |
+| 020 | [Write Benchmarks for Performance](go/020-write-benchmarks.md)               |
+
+## Rust (`rust/`)
+
+| #   | Principle                                                                        |
+| --- | -------------------------------------------------------------------------------- |
+| 001 | [Embrace Ownership and Borrowing](rust/001-embrace-ownership-and-borrowing.md)   |
+| 002 | [Use Result and Option for Error Handling](rust/002-use-result-and-option.md)    |
+| 003 | [Leverage the Type System](rust/003-leverage-the-type-system.md)                 |
+| 004 | [Use Cargo Effectively](rust/004-use-cargo-effectively.md)                       |
+| 005 | [Follow Rust API Guidelines](rust/005-follow-api-guidelines.md)                  |
+| 006 | [Use rustfmt and clippy](rust/006-use-rustfmt-and-clippy.md)                     |
+| 007 | [Write Comprehensive Tests](rust/007-write-comprehensive-tests.md)               |
+| 008 | [Use Traits for Shared Behavior](rust/008-use-traits-for-shared-behavior.md)     |
+| 009 | [Prefer Iterators Over Loops](rust/009-prefer-iterators-over-loops.md)           |
+| 010 | [Use Pattern Matching](rust/010-use-pattern-matching.md)                         |
+| 011 | [Avoid unwrap in Production](rust/011-avoid-unwrap-in-production.md)             |
+| 012 | [Use Smart Pointers Appropriately](rust/012-use-smart-pointers-appropriately.md) |
+| 013 | [Use async/await for Concurrency](rust/013-use-async-await-for-concurrency.md)   |
+| 014 | [Implement Error Types Properly](rust/014-implement-error-types-properly.md)     |
+| 015 | [Use Macros Sparingly](rust/015-use-macros-sparingly.md)                         |
+| 016 | [Follow Module Organization](rust/016-follow-module-organization.md)             |
+| 017 | [Use Lifetimes When Necessary](rust/017-use-lifetimes-when-necessary.md)         |
+| 018 | [Prefer &str Over String for Parameters](rust/018-prefer-str-over-string.md)     |
+| 019 | [Use Arc and Mutex for Shared State](rust/019-use-arc-mutex-for-shared-state.md) |
+| 020 | [Leverage Zero-Cost Abstractions](rust/020-leverage-zero-cost-abstractions.md)   |
