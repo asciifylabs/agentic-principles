@@ -9,6 +9,15 @@ REPO_BASE_URL="https://raw.githubusercontent.com/Exobitt/principles/main"
 HOOKS_DIR=".git/hooks"
 INSTALL_DIR="$HOOKS_DIR"
 
+# Detect if running from a local copy of the principles repo
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOCAL_SOURCE=""
+if [ -f "$SCRIPT_DIR/.claude/hooks/fetch-principles.sh" ]; then
+  LOCAL_SOURCE="$SCRIPT_DIR"
+elif [ -f "$SCRIPT_DIR/../.claude/hooks/fetch-principles.sh" ]; then
+  LOCAL_SOURCE="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+
 # Parse command line arguments
 NON_INTERACTIVE=false
 PRINCIPLES_ONLY=false
@@ -90,11 +99,19 @@ validate_permissions() {
   info "Write permissions verified"
 }
 
-# Download a file from GitHub
-download_file() {
-  local url=$1
+# Install a file from local repo or download from GitHub
+install_file() {
+  local url_path=$1  # relative path like .claude/hooks/fetch-principles.sh
   local dest=$2
 
+  # Prefer local copy if available
+  if [ -n "$LOCAL_SOURCE" ] && [ -f "$LOCAL_SOURCE/$url_path" ]; then
+    cp "$LOCAL_SOURCE/$url_path" "$dest"
+    return 0
+  fi
+
+  # Fall back to downloading from GitHub
+  local url="$REPO_BASE_URL/$url_path"
   if command -v curl &>/dev/null; then
     curl -sSL "$url" -o "$dest" || error "Failed to download $url"
   elif command -v wget &>/dev/null; then
@@ -121,20 +138,20 @@ backup_hook() {
 install_principles() {
   info "Installing principles fetching hooks..."
 
-  # Download fetch-principles.sh
-  download_file "$REPO_BASE_URL/.claude/hooks/fetch-principles.sh" "$INSTALL_DIR/fetch-principles.sh"
+  # Install fetch-principles.sh
+  install_file ".claude/hooks/fetch-principles.sh" "$INSTALL_DIR/fetch-principles.sh"
   chmod +x "$INSTALL_DIR/fetch-principles.sh"
   success "Installed fetch-principles.sh"
 
   # Install post-checkout hook
   backup_hook "post-checkout"
-  download_file "$REPO_BASE_URL/.claude/hooks/git-hooks/post-checkout" "$HOOKS_DIR/post-checkout"
+  install_file ".claude/hooks/git-hooks/post-checkout" "$HOOKS_DIR/post-checkout"
   chmod +x "$HOOKS_DIR/post-checkout"
   success "Installed post-checkout hook"
 
   # Install post-merge hook
   backup_hook "post-merge"
-  download_file "$REPO_BASE_URL/.claude/hooks/git-hooks/post-merge" "$HOOKS_DIR/post-merge"
+  install_file ".claude/hooks/git-hooks/post-merge" "$HOOKS_DIR/post-merge"
   chmod +x "$HOOKS_DIR/post-merge"
   success "Installed post-merge hook"
 
@@ -147,14 +164,14 @@ install_principles() {
 install_formatting() {
   info "Installing formatting/linting hooks..."
 
-  # Download format-lint.sh
-  download_file "$REPO_BASE_URL/.claude/hooks/format-lint.sh" "$INSTALL_DIR/format-lint.sh"
+  # Install format-lint.sh
+  install_file ".claude/hooks/format-lint.sh" "$INSTALL_DIR/format-lint.sh"
   chmod +x "$INSTALL_DIR/format-lint.sh"
   success "Installed format-lint.sh"
 
   # Install pre-commit hook
   backup_hook "pre-commit"
-  download_file "$REPO_BASE_URL/.claude/hooks/git-hooks/pre-commit" "$HOOKS_DIR/pre-commit"
+  install_file ".claude/hooks/git-hooks/pre-commit" "$HOOKS_DIR/pre-commit"
   chmod +x "$HOOKS_DIR/pre-commit"
   success "Installed pre-commit hook"
 
@@ -226,6 +243,10 @@ show_claude_code_instructions() {
   echo ""
   echo "Note: You may need to adjust the path to fetch-principles.sh based on where you installed it."
   echo "For example, use the full path: $PWD/$INSTALL_DIR/fetch-principles.sh"
+  echo ""
+  info "Claude Code permissions from claude-settings.json are automatically merged"
+  info "into ~/.claude/settings.json when fetch-principles.sh runs."
+  info "Set SKIP_SETTINGS=true to disable settings sync."
   echo ""
 }
 

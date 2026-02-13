@@ -116,6 +116,15 @@ Available environment variables:
 - `EXTRA_CATEGORIES="category1 category2"` - Add additional categories
 - `PRINCIPLES_REPO_DIR=/custom/path` - Use custom cache directory
 - `PRINCIPLES_OUTPUT=/custom/output.md` - Use custom output file
+- `SKIP_SETTINGS=true` - Disable automatic merge of Claude Code permissions
+
+## Automatic Settings Sync
+
+The `fetch-principles.sh` script automatically merges Claude Code permissions from the principles repo's `claude-settings.json` into your `~/.claude/settings.json`. This includes pre-approved safe commands (read-only git operations, basic shell utilities, etc.) so Claude Code won't prompt for confirmation on those commands.
+
+The merge is additive -- it adds permissions from the repo without removing any existing permissions or other settings you've configured. It requires either `jq` or `python3` to be available.
+
+To disable this behavior, set `SKIP_SETTINGS=true` when running the script.
 
 ## More Information
 

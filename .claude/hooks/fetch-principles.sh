@@ -169,9 +169,111 @@ for cat in $CATEGORIES; do
   done
 done
 
+# Detect and include project ADRs (Architecture Decision Records)
+ADR_DIRS=("docs/adr" "adr" "doc/adr" "docs/architecture/decisions" "docs/decisions")
+ADR_FOUND=false
+
+for adr_dir in "${ADR_DIRS[@]}"; do
+  if [ -d "$adr_dir" ]; then
+    adr_files=("$adr_dir"/*.md)
+    # Check glob actually matched files
+    if [ -f "${adr_files[0]}" ]; then
+      ADR_FOUND=true
+      log "Found ADRs in $adr_dir"
+      echo "# PROJECT ADRs" >> "$OUTPUT"
+      echo "" >> "$OUTPUT"
+      for f in "${adr_files[@]}"; do
+        log "  Including ADR: $(basename "$f")"
+        cat "$f" >> "$OUTPUT"
+        echo -e "\n---\n" >> "$OUTPUT"
+      done
+      break  # Only use the first matching ADR directory
+    fi
+  fi
+done
+
+if [ "$ADR_FOUND" = "false" ]; then
+  log "No ADR directory found in project"
+fi
+
 # Output summary
 line_count=$(wc -l < "$OUTPUT")
 log "Generated $OUTPUT with $line_count lines"
+
+# Merge Claude Code settings (permissions) into ~/.claude/settings.json
+SETTINGS_SOURCE="$REPO_DIR/claude-settings.json"
+SETTINGS_TARGET="$HOME/.claude/settings.json"
+SKIP_SETTINGS="${SKIP_SETTINGS:-false}"
+
+if [ "$SKIP_SETTINGS" = "true" ]; then
+  log "Skipping settings merge (SKIP_SETTINGS=true)"
+elif [ ! -f "$SETTINGS_SOURCE" ]; then
+  log "No claude-settings.json found in principles repo, skipping settings merge"
+else
+  log "Merging Claude Code settings into $SETTINGS_TARGET"
+
+  # Ensure ~/.claude directory exists
+  mkdir -p "$HOME/.claude"
+
+  # Initialize target if it doesn't exist or is empty
+  if [ ! -f "$SETTINGS_TARGET" ] || [ ! -s "$SETTINGS_TARGET" ]; then
+    echo '{}' > "$SETTINGS_TARGET"
+  fi
+
+  # Merge using jq (preferred) or python3 (fallback)
+  if command -v jq &>/dev/null; then
+    log "Using jq for settings merge"
+    merged=$(jq -s '
+      .[0] as $existing |
+      .[1] as $new |
+      $existing * {
+        permissions: {
+          allow: (
+            (($existing.permissions // {}).allow // []) +
+            (($new.permissions // {}).allow // [])
+            | unique
+          ),
+          deny: (($existing.permissions // {}).deny // []),
+          additionalDirectories: (
+            (($existing.permissions // {}).additionalDirectories // []) +
+            (($new.permissions // {}).additionalDirectories // [])
+            | unique
+          )
+        }
+      }
+    ' "$SETTINGS_TARGET" "$SETTINGS_SOURCE") && echo "$merged" > "$SETTINGS_TARGET"
+  elif command -v python3 &>/dev/null; then
+    log "Using python3 for settings merge"
+    python3 -c "
+import json, sys
+
+with open('$SETTINGS_TARGET') as f:
+    existing = json.load(f)
+with open('$SETTINGS_SOURCE') as f:
+    new = json.load(f)
+
+perms = existing.setdefault('permissions', {})
+
+# Merge permissions.allow (union, preserving order)
+existing_allow = perms.get('allow', [])
+new_allow = new.get('permissions', {}).get('allow', [])
+perms['allow'] = list(dict.fromkeys(existing_allow + new_allow))
+
+# Merge permissions.additionalDirectories (union, preserving order)
+existing_dirs = perms.get('additionalDirectories', [])
+new_dirs = new.get('permissions', {}).get('additionalDirectories', [])
+if existing_dirs or new_dirs:
+    perms['additionalDirectories'] = list(dict.fromkeys(existing_dirs + new_dirs))
+
+with open('$SETTINGS_TARGET', 'w') as f:
+    json.dump(existing, f, indent=2)
+    f.write('\n')
+" && log "Settings merged successfully" || error "Failed to merge settings with python3"
+  else
+    error "Neither jq nor python3 available - cannot merge settings"
+    log "Install jq or python3, or manually copy $SETTINGS_SOURCE to $SETTINGS_TARGET"
+  fi
+fi
 
 if [ "$VERBOSE" = "false" ]; then
   echo "Loaded principles: $CATEGORIES"
