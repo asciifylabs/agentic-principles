@@ -130,5 +130,5 @@ To disable this behavior, set `SKIP_SETTINGS=true` when running the script.
 
 For more details, see the main repository:
 
-- GitHub: https://github.com/Exobitt/principles
-- Troubleshooting: https://github.com/Exobitt/principles/blob/main/docs/TROUBLESHOOTING.md
+- GitHub: https://github.com/asciifylabs/agentic-principles
+- Troubleshooting: https://github.com/asciifylabs/agentic-principles/blob/main/docs/TROUBLESHOOTING.md

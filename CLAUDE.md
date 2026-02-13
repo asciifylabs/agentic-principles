@@ -1,4 +1,4 @@
-# Principles
+# Agentic Principles
 
 ## CRITICAL RULE: NEVER COMMIT OR PUSH
 
@@ -30,8 +30,8 @@ If the user asks you to work with a technology that wasn't initially detected, r
 set -euo pipefail
 
 REPO_DIR="/tmp/claude-principles-repo"
-REPO_SSH="git@github.com:Exobitt/principles.git"
-REPO_HTTPS="https://github.com/Exobitt/principles.git"
+REPO_SSH="git@github.com:asciifylabs/agentic-principles.git"
+REPO_HTTPS="https://github.com/asciifylabs/agentic-principles.git"
 
 # Clone or update
 if [ -d "$REPO_DIR/.git" ]; then

@@ -386,7 +386,7 @@ Common issues and solutions for the coding principles hook system.
 3. **Auto-install with installer:**
 
    ```bash
-   curl -sSL https://raw.githubusercontent.com/Exobitt/principles/main/install.sh | bash -s -- --auto-install-tools
+   curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install.sh | bash -s -- --auto-install-tools
    ```
 
 4. **Skip formatting temporarily:**
@@ -558,7 +558,7 @@ If none of these solutions work:
    - Write access to /tmp
 
 3. **Report an issue:**
-   - GitHub Issues: https://github.com/Exobitt/principles/issues
+   - GitHub Issues: https://github.com/asciifylabs/agentic-principles/issues
    - Include error messages and verbose output
    - Mention your OS and versions
 

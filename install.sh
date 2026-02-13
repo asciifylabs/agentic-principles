@@ -1,11 +1,11 @@
 #!/bin/bash
 # install.sh - Install coding principles hooks
-# Usage: curl -sSL https://raw.githubusercontent.com/Exobitt/principles/main/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install.sh | bash
 
 set -euo pipefail
 
 # Configuration
-REPO_BASE_URL="https://raw.githubusercontent.com/Exobitt/principles/main"
+REPO_BASE_URL="https://raw.githubusercontent.com/asciifylabs/agentic-principles/main"
 HOOKS_DIR=".git/hooks"
 INSTALL_DIR="$HOOKS_DIR"
 
@@ -374,7 +374,7 @@ main() {
   fi
 
   echo ""
-  info "For troubleshooting, see: https://github.com/Exobitt/principles/blob/main/docs/TROUBLESHOOTING.md"
+  info "For troubleshooting, see: https://github.com/asciifylabs/agentic-principles/blob/main/docs/TROUBLESHOOTING.md"
   echo ""
 }
 

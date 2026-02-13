@@ -9,8 +9,8 @@ set -euo pipefail
 # Configuration with environment overrides
 REPO_DIR="${PRINCIPLES_REPO_DIR:-/tmp/claude-principles-repo}"
 OUTPUT="${PRINCIPLES_OUTPUT:-/tmp/claude-principles-active.md}"
-REPO_SSH="git@github.com:Exobitt/principles.git"
-REPO_HTTPS="https://github.com/Exobitt/principles.git"
+REPO_SSH="git@github.com:asciifylabs/agentic-principles.git"
+REPO_HTTPS="https://github.com/asciifylabs/agentic-principles.git"
 LOCKFILE="/tmp/claude-principles.lock"
 MAX_LOCK_AGE=30
 VERBOSE="${VERBOSE:-false}"

@@ -7,7 +7,7 @@ Coding standards and best practices for this infrastructure repository. Each pri
 Install hooks to automatically fetch principles and enforce code quality:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Exobitt/principles/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install.sh | bash
 ```
 
 This will:
@@ -23,25 +23,25 @@ This will:
 **Full Installation** (principles + formatting):
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Exobitt/principles/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install.sh | bash
 ```
 
 **Principles Only** (no auto-formatting):
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Exobitt/principles/main/install.sh | bash -s -- --principles-only
+curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install.sh | bash -s -- --principles-only
 ```
 
 **Formatting Only** (no principles):
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Exobitt/principles/main/install.sh | bash -s -- --formatting-only
+curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install.sh | bash -s -- --formatting-only
 ```
 
 **With Auto-Install Tools**:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Exobitt/principles/main/install.sh | bash -s -- --auto-install-tools
+curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install.sh | bash -s -- --auto-install-tools
 ```
 
 ### Option 2: Claude Code Session Hook
@@ -205,7 +205,7 @@ The hooks will respect your configuration files automatically.
 ## Uninstalling
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Exobitt/principles/main/install.sh | bash -s -- --uninstall
+curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install.sh | bash -s -- --uninstall
 ```
 
 This will:
