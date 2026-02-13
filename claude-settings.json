@@ -3,6 +3,8 @@
     "allow": [
       "Edit",
       "Write",
+      "WebFetch",
+      "WebSearch",
       "Bash(date:*)",
       "Bash(echo:*)",
       "Bash(cat:*)",
