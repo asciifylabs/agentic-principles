@@ -128,6 +128,10 @@ if [ -f Cargo.toml ] || [ -f Cargo.lock ] || \
   log "Detected: rust"
 fi
 
+# Security: always included (language-agnostic)
+CATEGORIES="$CATEGORIES security"
+log "Always included: security"
+
 # Append any extra categories passed via env var
 if [ -n "${EXTRA_CATEGORIES:-}" ]; then
   CATEGORIES="$CATEGORIES ${EXTRA_CATEGORIES}"
@@ -136,7 +140,7 @@ fi
 
 # Fallback: if nothing detected, use all
 if [ -z "$(echo "$CATEGORIES" | tr -d ' ')" ]; then
-  CATEGORIES="shell ansible terraform kubernetes nodejs python go rust"
+  CATEGORIES="shell ansible terraform kubernetes nodejs python go rust security"
   log "No categories detected, using all"
 fi
 

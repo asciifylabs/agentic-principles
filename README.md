@@ -79,6 +79,7 @@ Copy and paste the script from [CLAUDE.md](CLAUDE.md) at the start of each Claud
 
 The hook system automatically detects technologies in your repository:
 
+- **Security**: **Always loaded** — language-agnostic code security and quality standards (OWASP, secrets management, input validation, secure defaults, etc.)
 - **Shell**: Detects `*.sh` files
 - **Terraform**: Detects `*.tf` files
 - **Ansible**: Detects `ansible.cfg`, `playbooks/`, or `roles/`
@@ -243,6 +244,29 @@ For common issues and solutions, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOT
 ---
 
 ## Principles Reference
+
+## Security (`security/`) — Always Loaded
+
+| #   | Principle                                                                                                |
+| --- | -------------------------------------------------------------------------------------------------------- |
+| 001 | [Never Hardcode Secrets](security/001-never-hardcode-secrets.md)                                         |
+| 002 | [Validate and Sanitize All Inputs](security/002-validate-and-sanitize-inputs.md)                         |
+| 003 | [Use Parameterized Queries](security/003-use-parameterized-queries.md)                                   |
+| 004 | [Prevent Cross-Site Scripting (XSS)](security/004-prevent-cross-site-scripting.md)                       |
+| 005 | [Implement Authentication Properly](security/005-implement-authentication-properly.md)                   |
+| 006 | [Enforce Authorization and Least Privilege](security/006-enforce-authorization-and-least-privilege.md)   |
+| 007 | [Protect Against CSRF](security/007-protect-against-csrf.md)                                             |
+| 008 | [Use HTTPS and Secure Communication](security/008-use-https-and-secure-communication.md)                 |
+| 009 | [Handle Errors Without Leaking Information](security/009-handle-errors-without-leaking-information.md)   |
+| 010 | [Log Security Events](security/010-log-security-events.md)                                               |
+| 011 | [Keep Dependencies Secure](security/011-keep-dependencies-secure.md)                                     |
+| 012 | [Use Secure Defaults](security/012-use-secure-defaults.md)                                               |
+| 013 | [Protect Sensitive Data](security/013-protect-sensitive-data.md)                                         |
+| 014 | [Prevent Injection Attacks](security/014-prevent-injection-attacks.md)                                   |
+| 015 | [Implement Rate Limiting](security/015-implement-rate-limiting.md)                                       |
+| 016 | [Use Static Analysis and Linting](security/016-use-static-analysis-and-linting.md)                       |
+| 017 | [Write Security-Focused Tests](security/017-write-security-focused-tests.md)                             |
+| 018 | [Follow Secure Code Review Practices](security/018-follow-secure-code-review-practices.md)               |
 
 ## Shell Scripting (`shell/`)
 
