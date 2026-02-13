@@ -101,8 +101,8 @@ if [ -f Chart.yaml ] || [ -f kustomization.yaml ] || \
   log "Detected: kubernetes"
 fi
 
-# Node.js: package.json or *.js/*.ts files
-if [ -f package.json ] || find . -maxdepth 3 \( -name '*.js' -o -name '*.ts' \) -print -quit 2>/dev/null | grep -q .; then
+# Node.js/TypeScript: package.json, *.js/*.jsx/*.ts/*.tsx files, or tsconfig.json
+if [ -f package.json ] || [ -f tsconfig.json ] || find . -maxdepth 3 \( -name '*.js' -o -name '*.jsx' -o -name '*.ts' -o -name '*.tsx' \) -print -quit 2>/dev/null | grep -q .; then
   CATEGORIES="$CATEGORIES nodejs"
   log "Detected: nodejs"
 fi
