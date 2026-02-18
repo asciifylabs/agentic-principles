@@ -128,6 +128,24 @@ if [ -f Cargo.toml ] || [ -f Cargo.lock ] || \
   log "Detected: rust"
 fi
 
+# AI: common AI/ML framework dependencies or imports
+if [ -f pyproject.toml ] && grep -qiE 'openai|anthropic|langchain|llama.index|transformers|torch|tensorflow|keras|huggingface' pyproject.toml 2>/dev/null; then
+  CATEGORIES="$CATEGORIES ai"
+  log "Detected: ai"
+elif [ -f requirements.txt ] && grep -qiE 'openai|anthropic|langchain|llama.index|transformers|torch|tensorflow' requirements.txt 2>/dev/null; then
+  CATEGORIES="$CATEGORIES ai"
+  log "Detected: ai"
+elif [ -f package.json ] && grep -qiE '"openai"|"anthropic"|"@anthropic-ai"|"langchain"|"@langchain"' package.json 2>/dev/null; then
+  CATEGORIES="$CATEGORIES ai"
+  log "Detected: ai"
+elif [ -f Cargo.toml ] && grep -qiE 'openai|anthropic|llm|candle' Cargo.toml 2>/dev/null; then
+  CATEGORIES="$CATEGORIES ai"
+  log "Detected: ai"
+elif [ -f go.mod ] && grep -qiE 'openai|anthropic|langchain' go.mod 2>/dev/null; then
+  CATEGORIES="$CATEGORIES ai"
+  log "Detected: ai"
+fi
+
 # Security: always included (language-agnostic)
 CATEGORIES="$CATEGORIES security"
 log "Always included: security"
@@ -140,7 +158,7 @@ fi
 
 # Fallback: if nothing detected, use all
 if [ -z "$(echo "$CATEGORIES" | tr -d ' ')" ]; then
-  CATEGORIES="shell ansible terraform kubernetes nodejs python go rust security"
+  CATEGORIES="shell ansible terraform kubernetes nodejs python go rust ai security"
   log "No categories detected, using all"
 fi
 
