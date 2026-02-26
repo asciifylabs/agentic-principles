@@ -1,15 +1,14 @@
 # Agentic Principles
 
-## CRITICAL RULE: NEVER COMMIT OR PUSH
+## Git Commit Policy
 
-**YOU MUST NEVER RUN `git commit` OR `git push` COMMANDS. EVER.**
+You MAY commit when the user asks you to. **Never run `git push`** — always let the user push themselves.
 
-This is a non-negotiable rule that applies to all repositories. When work is complete:
-
-- Stage files with `git add` if requested
-- Show `git status` and `git diff` to the user
-- STOP and let the user commit and push themselves
-- Never use `git commit` even if the user says "commit this" - instead prepare the staging area and show them what's ready
+- **Never add AI co-authorship** — do not add `Co-Authored-By`, `Signed-off-by`, or any trailer that attributes the commit to an AI. Commits should appear as the user's own work.
+- Write clear, conventional commit messages that describe the change
+- Stage specific files rather than using `git add -A` or `git add .`
+- Show `git status` and `git diff` before committing so the user can review
+- Never commit files that contain secrets (`.env`, credentials, API keys)
 
 ## Initialization
 
