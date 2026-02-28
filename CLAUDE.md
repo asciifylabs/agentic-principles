@@ -32,19 +32,19 @@ REPO_DIR="/tmp/claude-principles-repo"
 REPO_SSH="git@github.com:asciifylabs/agentic-principles.git"
 REPO_HTTPS="https://github.com/asciifylabs/agentic-principles.git"
 
-# Clone or update
-if [ -d "$REPO_DIR/.git" ]; then
-  git -C "$REPO_DIR" pull --ff-only -q 2>/dev/null || true
-else
+# Clone if not present (first run only)
+if [ ! -d "$REPO_DIR/.git" ]; then
   rm -rf "$REPO_DIR"
   git clone --depth 1 -q "$REPO_SSH" "$REPO_DIR" 2>/dev/null || \
   git clone --depth 1 -q "$REPO_HTTPS" "$REPO_DIR" 2>/dev/null || \
   { echo "Failed to clone principles repo" >&2; exit 1; }
 fi
 
-# Install hooks (uses local copy, skips download)
-bash "$REPO_DIR/install.sh" --non-interactive
-
-# Fetch principles + ADRs + merge settings
-bash "$REPO_DIR/.claude/hooks/fetch-principles.sh"
+# Install hooks if not already present in this repo
+if [ ! -f ".git/hooks/fetch-principles.sh" ]; then
+  bash "$REPO_DIR/install.sh" --non-interactive
+else
+  # Fetch principles with caching (only updates when remote main changes)
+  bash "$REPO_DIR/.claude/hooks/fetch-principles.sh"
+fi
 ```

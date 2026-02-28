@@ -14,6 +14,8 @@ REPO_HTTPS="https://github.com/asciifylabs/agentic-principles.git"
 LOCKFILE="/tmp/claude-principles.lock"
 MAX_LOCK_AGE=30
 VERBOSE="${VERBOSE:-false}"
+CACHE_META="/tmp/claude-principles-cache.meta"
+FORCE_REFRESH="${FORCE_REFRESH:-false}"
 
 # Logging function
 log() {
@@ -51,6 +53,29 @@ fi
 # Create lockfile
 echo $$ > "$LOCKFILE"
 log "Created lockfile"
+
+# --- Smart caching: skip fetch if remote main hasn't changed ---
+if [ "$FORCE_REFRESH" != "true" ] && [ -d "$REPO_DIR/.git" ] && [ -f "$OUTPUT" ] && [ -f "$CACHE_META" ]; then
+  LOCAL_SHA=$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || echo "")
+  CONTEXT_KEY="$(pwd)|${EXTRA_CATEGORIES:-}"
+  CACHED_CONTEXT=$(cat "$CACHE_META" 2>/dev/null || echo "")
+
+  # Lightweight remote check — only queries ref, doesn't download objects
+  REMOTE_SHA=$(git -C "$REPO_DIR" ls-remote origin refs/heads/main 2>/dev/null | cut -f1) || REMOTE_SHA=""
+
+  if [ -n "$REMOTE_SHA" ] && [ "$REMOTE_SHA" = "$LOCAL_SHA" ] && [ "$CONTEXT_KEY" = "$CACHED_CONTEXT" ]; then
+    log "Cache hit — remote unchanged (${LOCAL_SHA:0:8}), same project context"
+    [ "$VERBOSE" = "false" ] && echo "Principles up to date (cached)"
+    exit 0
+  fi
+
+  # Offline with matching context — use existing cache
+  if [ -z "$REMOTE_SHA" ] && [ "$CONTEXT_KEY" = "$CACHED_CONTEXT" ]; then
+    log "Offline — using cached principles"
+    [ "$VERBOSE" = "false" ] && echo "Principles up to date (cached, offline)"
+    exit 0
+  fi
+fi
 
 # Clone or update repository
 if [ -d "$REPO_DIR/.git" ]; then
@@ -296,6 +321,10 @@ with open('$SETTINGS_TARGET', 'w') as f:
     log "Install jq or python3, or manually copy $SETTINGS_SOURCE to $SETTINGS_TARGET"
   fi
 fi
+
+# Write cache metadata for next run
+echo "$(pwd)|${EXTRA_CATEGORIES:-}" > "$CACHE_META"
+log "Updated cache metadata"
 
 if [ "$VERBOSE" = "false" ]; then
   echo "Loaded principles: $CATEGORIES"
