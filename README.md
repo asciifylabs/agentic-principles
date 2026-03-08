@@ -18,7 +18,38 @@ AI coding agents are powerful, but they need guardrails. Style guides rot in wik
 
 ## Quick Start
 
-Install the skill files into your Claude Code project:
+### One-line install
+
+**Global install (all projects):**
+
+```bash
+curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install-skills.sh | bash -s -- --global
+```
+
+**Local install (this project only):**
+
+```bash
+cd /path/to/your/project
+curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install-skills.sh | bash -s -- --local
+```
+
+**Update:**
+
+```bash
+curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install-skills.sh | bash -s -- --update
+```
+
+**Uninstall:**
+
+```bash
+curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install-skills.sh | bash -s -- --uninstall
+```
+
+Updates are checked automatically once per day on session start. When an update is available, Claude will notify you.
+
+### Manual install
+
+Alternatively, install the skill files manually:
 
 ```bash
 # Clone the repo
