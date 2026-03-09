@@ -4,7 +4,7 @@
 
 **Curated coding principles that AI agents and developers actually follow.** Distributed as Claude Code skills that activate automatically based on the files you are working with.
 
-Agentic Principles ships 160+ actionable rules across 10 technology categories. Install the skills into any Claude Code project and they load on demand -- no configuration, no hooks, no bootstrap scripts.
+Agentic Principles ships 160+ actionable rules across 11 technology categories. Install the skills into any Claude Code project and they load on demand -- no configuration, no hooks, no bootstrap scripts.
 
 ## Why?
 
@@ -99,9 +99,14 @@ Each skill is a self-contained Markdown file with YAML frontmatter that tells Cl
 | `terraform-principles.md` | Working with `.tf`, `.tfvars` |
 | `ansible-principles.md` | Working with playbooks, roles, `ansible.cfg` |
 | `kubernetes-principles.md` | Working with Kubernetes manifests or Helm charts |
+| `git-principles.md` | Creating git commits, writing commit messages, or performing git operations |
 | `ai-principles.md` | Working with AI/ML frameworks (OpenAI, Anthropic, LangChain, PyTorch, TensorFlow) |
 
 ## Supported Technologies
+
+### Git -- 7 principles
+
+Commit hygiene, conventional commits, atomic changes, branch workflow, secret prevention, and pre-commit review discipline.
 
 ### Security -- 18 principles (always loaded)
 
@@ -144,6 +149,21 @@ Prompt engineering, output validation, RAG pipelines, chunking strategies, LLM o
 Ownership, Result/Option, traits, cargo, clippy, pattern matching, smart pointers, async/await, error types, lifetimes, and zero-cost abstractions.
 
 ## Principles Reference
+
+<details>
+<summary><strong>Git</strong> -- 7 principles</summary>
+
+| #   | Principle                                                                    |
+| --- | ---------------------------------------------------------------------------- |
+| 001 | [Never Add AI Co-Authorship](git/001-never-add-ai-coauthorship.md)           |
+| 002 | [Pull and Rebase Before Committing](git/002-pull-and-rebase-before-committing.md) |
+| 003 | [Write Conventional Commit Messages](git/003-write-conventional-commits.md)  |
+| 004 | [Commit Atomic Changes](git/004-commit-atomic-changes.md)                    |
+| 005 | [Use Branches for Features](git/005-use-branches-for-features.md)            |
+| 006 | [Never Commit Secrets](git/006-never-commit-secrets.md)                      |
+| 007 | [Review Changes Before Committing](git/007-review-before-committing.md)      |
+
+</details>
 
 <details>
 <summary><strong>Security</strong> -- 18 principles</summary>

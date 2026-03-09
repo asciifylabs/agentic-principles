@@ -147,7 +147,7 @@ Before considering code complete, run the following tools on all changed files. 
 Auto-fix what can be auto-fixed. Report unfixable issues to the user.
 LINT
       ;;
-    ai|security)
+    ai|git|security)
       # No linting section for these categories
       ;;
   esac

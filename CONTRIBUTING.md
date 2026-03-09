@@ -24,9 +24,11 @@ Thanks for your interest in contributing! This project thrives on community inpu
 
 1. Create a new directory at the repo root (e.g., `java/`)
 2. Add detection logic in `.claude/hooks/fetch-principles.sh`
-3. Add at least 5 initial principles
-4. Add the category to `README.md`
-5. Update `install.sh` if any new tooling is needed
+3. Add a trigger entry in `build-skills.sh` (`TRIGGERS` associative array)
+4. Add at least 5 initial principles
+5. Run `./build-skills.sh` to generate the skill file
+6. Add the skill to `SKILL_FILES` in `install-skills.sh`
+7. Add the category to `README.md` (skills table, supported technologies, and principles reference)
 
 ## Development Setup
 
@@ -34,11 +36,11 @@ Thanks for your interest in contributing! This project thrives on community inpu
 git clone https://github.com/asciifylabs/agentic-principles.git
 cd agentic-principles
 
-# Test installation locally
-bash install.sh --non-interactive
+# Build skill files from source principles
+./build-skills.sh
 
-# Test principle detection
-VERBOSE=true bash .claude/hooks/fetch-principles.sh
+# Test installation locally
+bash install-skills.sh --local
 ```
 
 ## Pull Request Guidelines
