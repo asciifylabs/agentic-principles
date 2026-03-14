@@ -1,20 +1,20 @@
-# Agentic Principles
+# Asciify Skills
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **Curated coding principles that AI agents and developers actually follow.** Distributed as Claude Code skills that activate automatically based on the files you are working with.
 
-Agentic Principles ships 175+ actionable rules across 12 technology categories. Install the skills into any Claude Code project and they load on demand -- no configuration, no hooks, no bootstrap scripts.
+Asciify Skills ships 185+ actionable rules across 12 technology categories. Install the skills into any Claude Code project and they load on demand -- no configuration, no hooks, no bootstrap scripts.
 
 ## Why?
 
-AI coding agents are powerful, but they need guardrails. Style guides rot in wikis. Linter configs drift across repos. Agentic Principles solves this by:
+AI coding agents are powerful, but they need guardrails. Style guides rot in wikis. Linter configs drift across repos. Asciify Skills solves this by:
 
 - **Context-triggered** -- skills activate automatically when you touch relevant file types
 - **Always loading** security principles -- because every project needs them
 - **Including linting guidance** -- each skill tells the agent which formatters and linters to run
-- **Staying current** -- update skills by pulling the latest from the repo
-- **Zero config** -- no hooks, no install scripts, no settings merge
+- **Self-managing** -- update, uninstall, and check status from inside Claude Code
+- **Zero config** -- no hooks, no settings merge, no background processes
 
 ## Quick Start
 
@@ -23,29 +23,37 @@ AI coding agents are powerful, but they need guardrails. Style guides rot in wik
 **Global install (all projects):**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install-skills.sh | bash -s -- --global
+curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --global
 ```
 
 **Local install (this project only):**
 
 ```bash
 cd /path/to/your/project
-curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install-skills.sh | bash -s -- --local
+curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --local
 ```
 
-**Update:**
+### Managing skills from Claude Code
 
+Once installed, manage everything from inside Claude Code — no more running shell scripts:
+
+| Command | What it does |
+| --- | --- |
+| `/asciify-skills:update` | Update all skills to the latest version |
+| `/asciify-skills:uninstall` | Remove asciify-skills |
+| `/asciify-skills:help` | Show installed skills, version, and commands |
+
+### Uninstall
+
+From Claude Code:
+```
+/asciify-skills:uninstall
+```
+
+Or from the terminal:
 ```bash
-curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install-skills.sh | bash -s -- --update
+curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --uninstall
 ```
-
-**Uninstall:**
-
-```bash
-curl -sSL https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/install-skills.sh | bash -s -- --uninstall
-```
-
-Updates are checked automatically once per day on session start. When an update is available, Claude will notify you.
 
 ### Manual install
 
@@ -53,24 +61,24 @@ Alternatively, install the skill files manually:
 
 ```bash
 # Clone the repo
-git clone https://github.com/asciifylabs/agentic-principles.git /tmp/agentic-principles
+git clone https://github.com/asciifylabs/asciify-skills.git /tmp/asciify-skills
 
 # Copy skills into your project
-mkdir -p .claude/skills
-cp /tmp/agentic-principles/skills/*.md .claude/skills/
+mkdir -p .claude/skills/asciify-skills
+cp /tmp/asciify-skills/skills/*.md .claude/skills/asciify-skills/
 ```
 
 Or fetch individual skills directly:
 
 ```bash
-mkdir -p .claude/skills
+mkdir -p .claude/skills/asciify-skills
 
 # Example: install only the skills you need
-curl -sO --output-dir .claude/skills \
-  https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/skills/security-principles.md
+curl -sO --output-dir .claude/skills/asciify-skills \
+  https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/skills/security-principles.md
 
-curl -sO --output-dir .claude/skills \
-  https://raw.githubusercontent.com/asciifylabs/agentic-principles/main/skills/python-principles.md
+curl -sO --output-dir .claude/skills/asciify-skills \
+  https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/skills/python-principles.md
 ```
 
 That's it. Claude Code reads skill files from `.claude/skills/` and activates them based on context.
@@ -92,16 +100,25 @@ Each skill is a self-contained Markdown file with YAML frontmatter that tells Cl
 | --- | --- |
 | `security-principles.md` | Writing, reviewing, or modifying any code in any language |
 | `docker-principles.md` | Working with Dockerfiles, docker-compose files, or container configurations |
+| `docker-principles.md` | Working with Dockerfiles, docker-compose files, or container configurations |
 | `shell-principles.md` | Working with `.sh`, `.bash`, Makefile, or Dockerfile |
 | `go-principles.md` | Working with `.go`, `go.mod`, `go.sum` |
 | `python-principles.md` | Working with `.py`, `pyproject.toml`, `requirements.txt` |
 | `nodejs-principles.md` | Working with `.js`, `.ts`, `.tsx`, `package.json` |
 | `rust-principles.md` | Working with `.rs`, `Cargo.toml` |
-| `terraform-principles.md` | Working with `.tf`, `.tfvars` |
+| `terraform-principles.md` | Working with Terraform or OpenTofu code (`.tf`, `.tfvars`) |
 | `ansible-principles.md` | Working with playbooks, roles, `ansible.cfg` |
 | `kubernetes-principles.md` | Working with Kubernetes manifests or Helm charts |
 | `git-principles.md` | Creating git commits, writing commit messages, or performing git operations |
 | `ai-principles.md` | Working with AI/ML frameworks (OpenAI, Anthropic, LangChain, PyTorch, TensorFlow) |
+
+### Management commands
+
+| Skill File | Command |
+| --- | --- |
+| `asciify-skills-update.md` | `/asciify-skills:update` |
+| `asciify-skills-uninstall.md` | `/asciify-skills:uninstall` |
+| `asciify-skills-help.md` | `/asciify-skills:help` |
 
 ## Supported Technologies
 
@@ -117,13 +134,17 @@ Language-agnostic security and code quality standards covering OWASP top 10, sec
 
 Multi-stage builds, non-root users, image pinning, `.dockerignore`, layer optimization, health checks, secrets management, read-only filesystems, vulnerability scanning, capability dropping, minimal base images, exec form entrypoints, seccomp/AppArmor, and BuildKit features.
 
+### Docker -- 15 principles
+
+Multi-stage builds, non-root users, image pinning, `.dockerignore`, layer optimization, health checks, secrets management, read-only filesystems, vulnerability scanning, capability dropping, minimal base images, exec form entrypoints, seccomp/AppArmor, and BuildKit features.
+
 ### Shell -- 12 principles
 
 `set -euo pipefail`, quoting, error handling, temporary files, structured logging, arrays, and functions.
 
-### Terraform -- 13 principles
+### Terraform / OpenTofu -- 14 principles
 
-Modules, remote state, workspaces, lifecycle rules, provider constraints, dependency graphs, and tagging.
+Modules, remote state, workspaces, lifecycle rules, provider constraints, dependency graphs, tagging, and OpenTofu-specific features (client-side state encryption, registry, early variable evaluation).
 
 ### Ansible -- 12 principles
 
@@ -220,6 +241,29 @@ Ownership, Result/Option, traits, cargo, clippy, pattern matching, smart pointer
 </details>
 
 <details>
+<summary><strong>Docker</strong> -- 15 principles</summary>
+
+| #   | Principle                                                                                      |
+| --- | ---------------------------------------------------------------------------------------------- |
+| 001 | [Use Specific Image Tags](docker/001-use-specific-image-tags.md)                               |
+| 002 | [Use Multi-Stage Builds](docker/002-use-multi-stage-builds.md)                                 |
+| 003 | [Run as Non-Root User](docker/003-run-as-non-root.md)                                          |
+| 004 | [Use .dockerignore](docker/004-use-dockerignore.md)                                            |
+| 005 | [Minimize Layers and Image Size](docker/005-minimize-layers.md)                                |
+| 006 | [Use COPY Instead of ADD](docker/006-use-copy-not-add.md)                                      |
+| 007 | [Set Health Checks](docker/007-set-health-checks.md)                                           |
+| 008 | [Never Store Secrets in Images](docker/008-never-store-secrets-in-images.md)                    |
+| 009 | [Use Read-Only Filesystem](docker/009-use-read-only-filesystem.md)                              |
+| 010 | [Scan Images for Vulnerabilities](docker/010-scan-images-for-vulnerabilities.md)                |
+| 011 | [Drop All Capabilities](docker/011-drop-capabilities.md)                                       |
+| 012 | [Use Minimal Base Images](docker/012-use-minimal-base-images.md)                                |
+| 013 | [Use Exec Form for CMD and ENTRYPOINT](docker/013-use-exec-form-for-entrypoint.md)              |
+| 014 | [Set Security Options](docker/014-set-security-options.md)                                      |
+| 015 | [Use BuildKit Features](docker/015-use-buildkit-features.md)                                    |
+
+</details>
+
+<details>
 <summary><strong>Shell</strong> -- 12 principles</summary>
 
 | #   | Principle                                                                    |
@@ -240,7 +284,7 @@ Ownership, Result/Option, traits, cargo, clippy, pattern matching, smart pointer
 </details>
 
 <details>
-<summary><strong>Terraform</strong> -- 13 principles</summary>
+<summary><strong>Terraform / OpenTofu</strong> -- 14 principles</summary>
 
 | #   | Principle                                                                                         |
 | --- | ------------------------------------------------------------------------------------------------- |
@@ -257,6 +301,7 @@ Ownership, Result/Option, traits, cargo, clippy, pattern matching, smart pointer
 | 011 | [Use Locals for Computed Values](terraform/011-use-locals-for-computed-values.md)                 |
 | 012 | [Use Workspaces Carefully](terraform/012-use-terraform-workspaces-carefully.md)                   |
 | 013 | [Understand Dependency Graphs](terraform/013-use-dependency-graphs.md)                            |
+| 014 | [Use OpenTofu-Specific Features](terraform/014-use-opentofu-features.md)                          |
 
 </details>
 
@@ -507,6 +552,7 @@ This script:
 3. Adds YAML frontmatter with the skill name and trigger description
 4. Appends linting/formatting guidance specific to each technology
 5. Writes the output to `skills/<category>-principles.md`
+6. Generates a `.version` file with the current git SHA
 
 Always run `build-skills.sh` after editing principles and commit the updated skill files alongside your source changes.
 

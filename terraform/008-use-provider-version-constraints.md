@@ -1,14 +1,15 @@
 # Use Provider Version Constraints
 
-> Pin Terraform and provider versions to ensure reproducible deployments.
+> Pin Terraform/OpenTofu and provider versions to ensure reproducible deployments.
 
 ## Rules
 
 - Specify required provider versions in the `required_providers` block
 - Use version constraints (e.g., `~> 4.0`, `>= 3.0, < 5.0`)
-- Pin the Terraform version itself in `required_version`
+- Pin the Terraform/OpenTofu version itself in `required_version`
 - Commit the `.terraform.lock.hcl` lock file for exact versions
 - Test provider upgrades before applying to production
+- When using OpenTofu, providers are sourced from the OpenTofu Registry by default -- verify provider availability if migrating
 
 ## Example
 

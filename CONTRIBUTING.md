@@ -1,4 +1,4 @@
-# Contributing to Agentic Principles
+# Contributing to Asciify Skills
 
 Thanks for your interest in contributing! This project thrives on community input — whether it's fixing a typo, improving an existing principle, or adding support for a new technology.
 
@@ -6,7 +6,7 @@ Thanks for your interest in contributing! This project thrives on community inpu
 
 - **Improve existing principles** — clarify wording, add better examples, fix inaccuracies
 - **Add new principles** — for existing or new technology categories
-- **Report issues** — found a bug in the install script or hooks? Let us know
+- **Report issues** — found a bug in the install script? Let us know
 - **Suggest features** — ideas for new technology detection, formatting tools, or workflow improvements
 
 ## Adding a New Principle
@@ -23,24 +23,26 @@ Thanks for your interest in contributing! This project thrives on community inpu
 ## Adding a New Technology Category
 
 1. Create a new directory at the repo root (e.g., `java/`)
-2. Add detection logic in `.claude/hooks/fetch-principles.sh`
-3. Add a trigger entry in `build-skills.sh` (`TRIGGERS` associative array)
-4. Add at least 5 initial principles
-5. Run `./build-skills.sh` to generate the skill file
-6. Add the skill to `SKILL_FILES` in `install-skills.sh`
-7. Add the category to `README.md` (skills table, supported technologies, and principles reference)
+2. Add a trigger entry in `build-skills.sh` (`get_trigger` function)
+3. Add at least 5 initial principles
+4. Run `./build-skills.sh` to generate the skill file
+5. Add the skill to `SKILL_FILES` in `install.sh`
+6. Add the category to `README.md` (skills table, supported technologies, and principles reference)
 
 ## Development Setup
 
 ```bash
-git clone https://github.com/asciifylabs/agentic-principles.git
-cd agentic-principles
+git clone https://github.com/asciifylabs/asciify-skills.git
+cd asciify-skills
 
 # Build skill files from source principles
 ./build-skills.sh
 
 # Test installation locally
-bash install-skills.sh --local
+bash install.sh --local
+
+# Run tests
+bash test.sh
 ```
 
 ## Pull Request Guidelines

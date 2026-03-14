@@ -1,4 +1,4 @@
-# Agentic Principles
+# Asciify Skills
 
 ## Git Commit Policy
 

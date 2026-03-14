@@ -1,20 +1,20 @@
-# Use Terraform Cloud or CI/CD for Automation
+# Use Terraform Cloud, CI/CD, or OpenTofu for Automation
 
-> Automate all Terraform execution through CI/CD pipelines or Terraform Cloud -- never apply manually.
+> Automate all Terraform/OpenTofu execution through CI/CD pipelines, Terraform Cloud, or equivalent -- never apply manually.
 
 ## Rules
 
-- Use Terraform Cloud/Enterprise or CI/CD pipelines (GitHub Actions, GitLab CI, etc.)
+- Use Terraform Cloud/Enterprise, CI/CD pipelines (GitHub Actions, GitLab CI, etc.), or OpenTofu-compatible automation
 - Require plan review before apply
-- Run `terraform fmt` and `terraform validate` in CI
+- Run `terraform fmt` / `tofu fmt` and `terraform validate` / `tofu validate` in CI
 - Use policy as code (Sentinel, OPA) for governance
 - Store state remotely and lock during runs
-- Never run `terraform apply` from a local machine in production
+- Never run `terraform apply` or `tofu apply` from a local machine in production
 
 ## Example
 
 ```yaml
-# .github/workflows/terraform.yml
+# .github/workflows/terraform.yml — works with both Terraform and OpenTofu
 name: Terraform
 on:
   pull_request:
@@ -30,21 +30,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: hashicorp/setup-terraform@v1
 
-      - name: Terraform Format
+      # Use hashicorp/setup-terraform for Terraform
+      # or opentofu/setup-opentofu for OpenTofu
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Format Check
         run: terraform fmt -check
 
-      - name: Terraform Init
+      - name: Init
         run: terraform init
 
-      - name: Terraform Validate
+      - name: Validate
         run: terraform validate
 
-      - name: Terraform Plan
+      - name: Plan
         run: terraform plan
 
-      - name: Terraform Apply
+      - name: Apply
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve
 ```

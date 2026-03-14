@@ -1,6 +1,6 @@
 # Use Remote State Backend
 
-> Always store Terraform state in a remote, encrypted, and locked backend.
+> Always store Terraform/OpenTofu state in a remote, encrypted, and locked backend.
 
 ## Rules
 
@@ -10,6 +10,7 @@
 - Use different backends per environment
 - Never commit state files to version control
 - Use state backends that support versioning
+- When using OpenTofu, prefer client-side state encryption for an additional layer of security
 
 ## Example
 

@@ -1,4 +1,4 @@
-# Agentic Principles — Skills
+# Asciify Skills
 
 These skills provide coding principles, linting, and security scanning for Claude Code.
 
@@ -13,10 +13,19 @@ These skills provide coding principles, linting, and security scanning for Claud
 | `python-principles` | .py, pyproject.toml, requirements.txt |
 | `nodejs-principles` | .js, .ts, .tsx, package.json |
 | `rust-principles` | .rs, Cargo.toml |
-| `terraform-principles` | .tf, .tfvars |
+| `terraform-principles` | .tf, .tfvars (Terraform and OpenTofu) |
 | `ansible-principles` | playbooks, roles, ansible.cfg |
 | `kubernetes-principles` | Kubernetes manifests, Helm charts |
 | `ai-principles` | AI/ML code (OpenAI, Anthropic, LangChain, etc.) |
+| `git-principles` | Git operations and commits |
+
+## Management Commands
+
+| Command | What it does |
+|---------|-------------|
+| `/asciify-skills:update` | Update to the latest version |
+| `/asciify-skills:uninstall` | Remove asciify-skills |
+| `/asciify-skills:help` | Show status and help |
 
 ## What Each Skill Includes
 

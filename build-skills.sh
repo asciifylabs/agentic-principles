@@ -7,21 +7,39 @@ SKIP_DIRS="skills docs .claude .git"
 
 mkdir -p "${SKILLS_DIR}"
 
-# Trigger descriptions per category
-declare -A TRIGGERS=(
-  [security]="Use when writing, reviewing, or modifying any code in any language"
-  [shell]="Use when writing, reviewing, or modifying shell scripts (.sh, .bash, Makefile, Dockerfile)"
-  [go]="Use when writing, reviewing, or modifying Go code (.go, go.mod, go.sum)"
-  [python]="Use when writing, reviewing, or modifying Python code (.py, pyproject.toml, requirements.txt)"
-  [nodejs]="Use when writing, reviewing, or modifying JavaScript or TypeScript code (.js, .ts, .tsx, package.json)"
-  [rust]="Use when writing, reviewing, or modifying Rust code (.rs, Cargo.toml)"
-  [terraform]="Use when writing, reviewing, or modifying Terraform code (.tf, .tfvars)"
-  [ansible]="Use when writing, reviewing, or modifying Ansible code (playbooks, roles, ansible.cfg)"
-  [kubernetes]="Use when writing, reviewing, or modifying Kubernetes manifests or Helm charts"
-  [ai]="Use when writing, reviewing, or modifying AI/ML code using frameworks like OpenAI, Anthropic, LangChain, PyTorch, TensorFlow"
-  [git]="Use when creating git commits, writing commit messages, or performing any git operations"
-  [docker]="Use when writing, reviewing, or modifying Dockerfiles, docker-compose files, or container configurations"
-)
+# Trigger description for a given category (Bash 3.2 compatible — no associative arrays)
+get_trigger() {
+  case "$1" in
+    security)   echo "Use when writing, reviewing, or modifying any code in any language" ;;
+    shell)      echo "Use when writing, reviewing, or modifying shell scripts (.sh, .bash, Makefile, Dockerfile)" ;;
+    go)         echo "Use when writing, reviewing, or modifying Go code (.go, go.mod, go.sum)" ;;
+    python)     echo "Use when writing, reviewing, or modifying Python code (.py, pyproject.toml, requirements.txt)" ;;
+    nodejs)     echo "Use when writing, reviewing, or modifying JavaScript or TypeScript code (.js, .ts, .tsx, package.json)" ;;
+    rust)       echo "Use when writing, reviewing, or modifying Rust code (.rs, Cargo.toml)" ;;
+    terraform)  echo "Use when writing, reviewing, or modifying Terraform or OpenTofu code (.tf, .tfvars)" ;;
+    ansible)    echo "Use when writing, reviewing, or modifying Ansible code (playbooks, roles, ansible.cfg)" ;;
+    kubernetes) echo "Use when writing, reviewing, or modifying Kubernetes manifests or Helm charts" ;;
+    ai)         echo "Use when writing, reviewing, or modifying AI/ML code using frameworks like OpenAI, Anthropic, LangChain, PyTorch, TensorFlow" ;;
+    git)        echo "Use when creating git commits, writing commit messages, or performing any git operations" ;;
+    docker)     echo "Use when writing, reviewing, or modifying Dockerfiles, docker-compose files, or container configurations" ;;
+    *)          echo "Use when writing, reviewing, or modifying $1 code" ;;
+  esac
+}
+
+# Display name for a given category
+get_display_name() {
+  case "$1" in
+    ai)     echo "AI" ;;
+    nodejs) echo "Node.js" ;;
+    go)     echo "Go" ;;
+    *)
+      # Capitalize first letter (Bash 3.2 compatible)
+      first="$(echo "$1" | cut -c1 | tr '[:lower:]' '[:upper:]')"
+      rest="$(echo "$1" | cut -c2-)"
+      echo "${first}${rest}"
+      ;;
+  esac
+}
 
 # Generate linting section for a given category
 generate_linting_section() {
@@ -112,9 +130,17 @@ LINT
 
 Before considering code complete, run the following tools on all changed files. If a tool is not installed, skip it and suggest the install command to the user.
 
-- **terraform fmt** — format Terraform configuration files: `terraform fmt -recursive`
-- **terraform validate** — validate Terraform configuration: `terraform validate`
+For Terraform projects:
+- **terraform fmt** — format configuration files: `terraform fmt -recursive`
+- **terraform validate** — validate configuration: `terraform validate`
 - **tflint** — Terraform linter for best practices: `tflint --recursive`
+
+For OpenTofu projects (use `tofu` instead of `terraform`):
+- **tofu fmt** — format configuration files: `tofu fmt -recursive`
+- **tofu validate** — validate configuration: `tofu validate`
+- **tflint** — linter for best practices (works with both): `tflint --recursive`
+
+Detect which tool the project uses by checking for `.terraform` vs `.tofu` directories, CI config, or lock files. When in doubt, ask the user.
 
 Auto-fix what can be auto-fixed. Report unfixable issues to the user.
 LINT
@@ -210,7 +236,7 @@ for category_dir in "${SCRIPT_DIR}"/*/; do
   category="$(basename "${category_dir}")"
 
   # Skip non-principle directories
-  if [[ " ${SKIP_DIRS} " == *" ${category} "* ]]; then
+  if echo " ${SKIP_DIRS} " | grep -q " ${category} "; then
     continue
   fi
 
@@ -223,25 +249,19 @@ for category_dir in "${SCRIPT_DIR}"/*/; do
   fi
 
   output_file="${SKILLS_DIR}/${category}-principles.md"
-
-  # Display names for categories that need special casing
-  declare -A DISPLAY_NAMES=(
-    [ai]="AI"
-    [docker]="Docker"
-    [nodejs]="Node.js"
-  )
-  capitalized="${DISPLAY_NAMES[${category}]:-${category^}}"
+  trigger="$(get_trigger "${category}")"
+  display_name="$(get_display_name "${category}")"
 
   {
     # YAML frontmatter
     echo "---"
     echo "name: ${category}-principles"
-    echo "description: \"${TRIGGERS[${category}]}\""
+    echo "description: \"${trigger}\""
     echo "---"
     echo ""
 
     # Header
-    echo "# ${capitalized} Principles"
+    echo "# ${display_name} Principles"
     echo ""
     echo "These are non-negotiable coding standards -- if you are about to write code that violates a principle, stop and fix it. When reviewing code, flag any violations."
     echo ""
@@ -269,5 +289,13 @@ for category_dir in "${SCRIPT_DIR}"/*/; do
 
   echo "Generated: ${output_file}"
 done
+
+# Generate version file
+{
+  sha="$(git rev-parse HEAD 2>/dev/null || echo "dev")"
+  echo "SHA=${sha}"
+  echo "BUILT=$(date +%Y-%m-%d)"
+} > "${SKILLS_DIR}/.version"
+echo "Generated: ${SKILLS_DIR}/.version"
 
 echo "Done. All skill files generated in ${SKILLS_DIR}/"

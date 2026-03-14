@@ -1,6 +1,6 @@
 ---
 name: terraform-principles
-description: "Use when writing, reviewing, or modifying Terraform code (.tf, .tfvars)"
+description: "Use when writing, reviewing, or modifying Terraform or OpenTofu code (.tf, .tfvars)"
 ---
 
 # Terraform Principles
@@ -50,7 +50,7 @@ module "network" {
 
 # Use Remote State Backend
 
-> Always store Terraform state in a remote, encrypted, and locked backend.
+> Always store Terraform/OpenTofu state in a remote, encrypted, and locked backend.
 
 ## Rules
 
@@ -60,6 +60,7 @@ module "network" {
 - Use different backends per environment
 - Never commit state files to version control
 - Use state backends that support versioning
+- When using OpenTofu, prefer client-side state encryption for an additional layer of security
 
 ## Example
 
@@ -249,23 +250,23 @@ resource "aws_db_instance" "critical" {
 
 ---
 
-# Use Terraform Cloud or CI/CD for Automation
+# Use Terraform Cloud, CI/CD, or OpenTofu for Automation
 
-> Automate all Terraform execution through CI/CD pipelines or Terraform Cloud -- never apply manually.
+> Automate all Terraform/OpenTofu execution through CI/CD pipelines, Terraform Cloud, or equivalent -- never apply manually.
 
 ## Rules
 
-- Use Terraform Cloud/Enterprise or CI/CD pipelines (GitHub Actions, GitLab CI, etc.)
+- Use Terraform Cloud/Enterprise, CI/CD pipelines (GitHub Actions, GitLab CI, etc.), or OpenTofu-compatible automation
 - Require plan review before apply
-- Run `terraform fmt` and `terraform validate` in CI
+- Run `terraform fmt` / `tofu fmt` and `terraform validate` / `tofu validate` in CI
 - Use policy as code (Sentinel, OPA) for governance
 - Store state remotely and lock during runs
-- Never run `terraform apply` from a local machine in production
+- Never run `terraform apply` or `tofu apply` from a local machine in production
 
 ## Example
 
 ```yaml
-# .github/workflows/terraform.yml
+# .github/workflows/terraform.yml — works with both Terraform and OpenTofu
 name: Terraform
 on:
   pull_request:
@@ -281,21 +282,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: hashicorp/setup-terraform@v1
 
-      - name: Terraform Format
+      # Use hashicorp/setup-terraform for Terraform
+      # or opentofu/setup-opentofu for OpenTofu
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Format Check
         run: terraform fmt -check
 
-      - name: Terraform Init
+      - name: Init
         run: terraform init
 
-      - name: Terraform Validate
+      - name: Validate
         run: terraform validate
 
-      - name: Terraform Plan
+      - name: Plan
         run: terraform plan
 
-      - name: Terraform Apply
+      - name: Apply
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve
 ```
@@ -304,15 +308,16 @@ jobs:
 
 # Use Provider Version Constraints
 
-> Pin Terraform and provider versions to ensure reproducible deployments.
+> Pin Terraform/OpenTofu and provider versions to ensure reproducible deployments.
 
 ## Rules
 
 - Specify required provider versions in the `required_providers` block
 - Use version constraints (e.g., `~> 4.0`, `>= 3.0, < 5.0`)
-- Pin the Terraform version itself in `required_version`
+- Pin the Terraform/OpenTofu version itself in `required_version`
 - Commit the `.terraform.lock.hcl` lock file for exact versions
 - Test provider upgrades before applying to production
+- When using OpenTofu, providers are sourced from the OpenTofu Registry by default -- verify provider availability if migrating
 
 ## Example
 
@@ -342,27 +347,31 @@ provider "aws" {
 
 # Use terraform fmt and validate
 
-> Run `terraform fmt` and `terraform validate` on every change, enforced by pre-commit hooks and CI.
+> Run `terraform fmt` / `tofu fmt` and `terraform validate` / `tofu validate` on every change, enforced by pre-commit hooks and CI.
 
 ## Rules
 
-- Run `terraform fmt -recursive` to format all files consistently
-- Run `terraform validate` to catch syntax and configuration errors early
-- Use `terraform fmt -check` in CI to fail on unformatted code
+- Run `terraform fmt -recursive` (or `tofu fmt -recursive`) to format all files consistently
+- Run `terraform validate` (or `tofu validate`) to catch syntax and configuration errors early
+- Use `terraform fmt -check` (or `tofu fmt -check`) in CI to fail on unformatted code
 - Integrate both into pre-commit hooks
 - Validate before every commit and in every CI pipeline run
+- Both `terraform` and `tofu` CLIs produce compatible formatting -- pick one per project and stay consistent
 
 ## Example
 
 ```bash
-# Format all Terraform files
+# Format all Terraform/OpenTofu files
 terraform fmt -recursive
+# or: tofu fmt -recursive
 
 # Check if formatting is needed (for CI)
 terraform fmt -check -recursive
+# or: tofu fmt -check -recursive
 
 # Validate configuration
 terraform validate
+# or: tofu validate
 
 # Pre-commit hook example
 #!/bin/bash
@@ -571,12 +580,71 @@ module "compute" {
 
 ---
 
+# Use OpenTofu-Specific Features When Available
+
+> When using OpenTofu, leverage its unique capabilities for better security, flexibility, and developer experience.
+
+## Rules
+
+- Use client-side state encryption to protect sensitive data at rest -- configure `encryption` blocks in your backend
+- Use early variable and local evaluation where supported to simplify configuration
+- Source providers from the OpenTofu Registry; verify availability before migrating from Terraform
+- Use the `tofu` CLI as a drop-in replacement for `terraform` -- commands and flags are compatible
+- Use `-test-directory` flag for running module tests when writing testable infrastructure
+- When migrating from Terraform, run `tofu init -upgrade` to re-initialize with OpenTofu-compatible providers
+- Keep `required_version` constraints compatible if your team uses both tools
+
+## Example
+
+```hcl
+# State encryption (OpenTofu-specific)
+terraform {
+  encryption {
+    method "aes_gcm" "default" {
+      keys = key_provider.pbkdf2.default
+    }
+
+    key_provider "pbkdf2" "default" {
+      passphrase = var.state_passphrase
+    }
+
+    state {
+      method   = method.aes_gcm.default
+      enforced = true
+    }
+
+    plan {
+      method   = method.aes_gcm.default
+      enforced = true
+    }
+  }
+
+  backend "s3" {
+    bucket         = "my-tofu-state"
+    key            = "production/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "tofu-locks"
+  }
+}
+```
+
+---
+
 # Linting and Formatting
 
 Before considering code complete, run the following tools on all changed files. If a tool is not installed, skip it and suggest the install command to the user.
 
-- **terraform fmt** — format Terraform configuration files: `terraform fmt -recursive`
-- **terraform validate** — validate Terraform configuration: `terraform validate`
+For Terraform projects:
+- **terraform fmt** — format configuration files: `terraform fmt -recursive`
+- **terraform validate** — validate configuration: `terraform validate`
 - **tflint** — Terraform linter for best practices: `tflint --recursive`
+
+For OpenTofu projects (use `tofu` instead of `terraform`):
+- **tofu fmt** — format configuration files: `tofu fmt -recursive`
+- **tofu validate** — validate configuration: `tofu validate`
+- **tflint** — linter for best practices (works with both): `tflint --recursive`
+
+Detect which tool the project uses by checking for `.terraform` vs `.tofu` directories, CI config, or lock files. When in doubt, ask the user.
 
 Auto-fix what can be auto-fixed. Report unfixable issues to the user.
