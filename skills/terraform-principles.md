@@ -1,6 +1,7 @@
 ---
 name: terraform-principles
 description: "Use when writing, reviewing, or modifying Terraform or OpenTofu code (.tf, .tfvars)"
+globs: ["**/*.tf", "**/*.tfvars", "**/*.tofu"]
 ---
 
 # Terraform Principles

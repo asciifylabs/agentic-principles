@@ -1,6 +1,7 @@
 ---
 name: go-principles
 description: "Use when writing, reviewing, or modifying Go code (.go, go.mod, go.sum)"
+globs: ["**/*.go", "**/go.mod", "**/go.sum"]
 ---
 
 # Go Principles

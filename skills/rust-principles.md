@@ -1,6 +1,7 @@
 ---
 name: rust-principles
 description: "Use when writing, reviewing, or modifying Rust code (.rs, Cargo.toml)"
+globs: ["**/*.rs", "**/Cargo.toml", "**/Cargo.lock"]
 ---
 
 # Rust Principles

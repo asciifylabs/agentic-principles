@@ -1,6 +1,7 @@
 ---
 name: kubernetes-principles
 description: "Use when writing, reviewing, or modifying Kubernetes manifests or Helm charts"
+globs: ["**/k8s/**/*.yml", "**/k8s/**/*.yaml", "**/helm/**/*.yml", "**/helm/**/*.yaml", "**/Chart.yaml", "**/values.yaml"]
 ---
 
 # Kubernetes Principles

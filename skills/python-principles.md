@@ -1,6 +1,7 @@
 ---
 name: python-principles
 description: "Use when writing, reviewing, or modifying Python code (.py, pyproject.toml, requirements.txt)"
+globs: ["**/*.py", "**/pyproject.toml", "**/requirements*.txt", "**/setup.py", "**/setup.cfg"]
 ---
 
 # Python Principles

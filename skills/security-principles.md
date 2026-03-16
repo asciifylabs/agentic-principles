@@ -1,6 +1,7 @@
 ---
 name: security-principles
 description: "Use when writing, reviewing, or modifying any code in any language"
+globs: ["**/*"]
 ---
 
 # Security Principles

@@ -26,6 +26,25 @@ get_trigger() {
   esac
 }
 
+# Glob patterns for auto-triggering (Bash 3.2 compatible — no associative arrays)
+get_globs() {
+  case "$1" in
+    security)   echo '["**/*"]' ;;
+    shell)      echo '["**/*.sh", "**/*.bash", "**/Makefile", "**/Makefile.*"]' ;;
+    go)         echo '["**/*.go", "**/go.mod", "**/go.sum"]' ;;
+    python)     echo '["**/*.py", "**/pyproject.toml", "**/requirements*.txt", "**/setup.py", "**/setup.cfg"]' ;;
+    nodejs)     echo '["**/*.js", "**/*.ts", "**/*.tsx", "**/*.jsx", "**/package.json", "**/tsconfig.json"]' ;;
+    rust)       echo '["**/*.rs", "**/Cargo.toml", "**/Cargo.lock"]' ;;
+    terraform)  echo '["**/*.tf", "**/*.tfvars", "**/*.tofu"]' ;;
+    ansible)    echo '["**/playbooks/**/*.yml", "**/roles/**/*.yml", "**/roles/**/*.j2", "**/inventories/**/*.yml", "**/ansible.cfg"]' ;;
+    kubernetes) echo '["**/k8s/**/*.yml", "**/k8s/**/*.yaml", "**/helm/**/*.yml", "**/helm/**/*.yaml", "**/Chart.yaml", "**/values.yaml"]' ;;
+    ai)         echo '["**/*.py", "**/*.ts", "**/*.js"]' ;;
+    git)        echo "" ;;
+    docker)     echo '["**/Dockerfile", "**/Dockerfile.*", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/.dockerignore"]' ;;
+    *)          echo "" ;;
+  esac
+}
+
 # Display name for a given category
 get_display_name() {
   case "$1" in
@@ -251,12 +270,16 @@ for category_dir in "${SCRIPT_DIR}"/*/; do
   output_file="${SKILLS_DIR}/${category}-principles.md"
   trigger="$(get_trigger "${category}")"
   display_name="$(get_display_name "${category}")"
+  globs="$(get_globs "${category}")"
 
   {
     # YAML frontmatter
     echo "---"
     echo "name: ${category}-principles"
     echo "description: \"${trigger}\""
+    if [[ -n "${globs}" ]]; then
+      echo "globs: ${globs}"
+    fi
     echo "---"
     echo ""
 

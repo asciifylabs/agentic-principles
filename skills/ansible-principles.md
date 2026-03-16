@@ -1,6 +1,7 @@
 ---
 name: ansible-principles
 description: "Use when writing, reviewing, or modifying Ansible code (playbooks, roles, ansible.cfg)"
+globs: ["**/playbooks/**/*.yml", "**/roles/**/*.yml", "**/roles/**/*.j2", "**/inventories/**/*.yml", "**/ansible.cfg"]
 ---
 
 # Ansible Principles

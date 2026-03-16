@@ -1,6 +1,7 @@
 ---
 name: ai-principles
 description: "Use when writing, reviewing, or modifying AI/ML code using frameworks like OpenAI, Anthropic, LangChain, PyTorch, TensorFlow"
+globs: ["**/*.py", "**/*.ts", "**/*.js"]
 ---
 
 # AI Principles

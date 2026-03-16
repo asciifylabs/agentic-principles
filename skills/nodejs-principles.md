@@ -1,6 +1,7 @@
 ---
 name: nodejs-principles
 description: "Use when writing, reviewing, or modifying JavaScript or TypeScript code (.js, .ts, .tsx, package.json)"
+globs: ["**/*.js", "**/*.ts", "**/*.tsx", "**/*.jsx", "**/package.json", "**/tsconfig.json"]
 ---
 
 # Node.js Principles

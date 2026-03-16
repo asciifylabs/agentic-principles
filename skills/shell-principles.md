@@ -1,6 +1,7 @@
 ---
 name: shell-principles
 description: "Use when writing, reviewing, or modifying shell scripts (.sh, .bash, Makefile, Dockerfile)"
+globs: ["**/*.sh", "**/*.bash", "**/Makefile", "**/Makefile.*"]
 ---
 
 # Shell Principles
