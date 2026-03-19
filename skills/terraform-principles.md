@@ -632,6 +632,140 @@ terraform {
 
 ---
 
+# Write Tests for Infrastructure
+
+> Validate Terraform/OpenTofu configurations with automated tests to catch misconfigurations before they reach production.
+
+## Rules
+
+- Use `terraform validate` and `tofu validate` as the first line of defense
+- Write policy tests with OPA/Conftest, Sentinel, or Checkov for compliance
+- Use `terraform test` (v1.6+) or Terratest for integration testing
+- Test modules in isolation with minimal variable inputs
+- Validate plan output against expected resources before applying
+- Run `terraform plan` in CI on every PR to surface changes early
+- Test destructive operations (replacements, deletions) are flagged before apply
+
+## Example
+
+```hcl
+# tests/main.tftest.hcl (terraform test)
+run "creates_s3_bucket" {
+  command = plan
+
+  assert {
+    condition     = aws_s3_bucket.main.bucket == "my-app-data"
+    error_message = "Bucket name must be my-app-data"
+  }
+
+  assert {
+    condition     = aws_s3_bucket_versioning.main.versioning_configuration[0].status == "Enabled"
+    error_message = "Versioning must be enabled"
+  }
+}
+
+run "blocks_public_access" {
+  command = plan
+
+  assert {
+    condition     = aws_s3_bucket_public_access_block.main.block_public_acls == true
+    error_message = "Public ACLs must be blocked"
+  }
+}
+```
+
+```bash
+# Run terraform native tests
+terraform test
+
+# Run Checkov for policy compliance
+checkov -d .
+
+# Run Conftest with custom OPA policies
+conftest test --policy policy/ tfplan.json
+```
+
+---
+
+# Follow Security Best Practices
+
+> Harden Terraform/OpenTofu configurations to prevent unauthorized access, data exposure, and insecure infrastructure.
+
+## Rules
+
+- Never store secrets in `.tf` files or `.tfvars`; use environment variables, vault references, or secret manager data sources
+- Encrypt state files at rest; use remote backends with encryption (S3 + KMS, GCS + CMEK, OpenTofu state encryption)
+- Restrict state file access with IAM policies; state contains sensitive data
+- Use `sensitive = true` on variables and outputs that contain secrets
+- Enable encryption at rest and in transit for all storage and database resources
+- Apply least-privilege IAM policies; never use wildcard (`*`) permissions in production
+- Run security scanners (tfsec, Checkov, trivy) in CI to catch misconfigurations
+
+## Example
+
+```hcl
+# Bad: secrets in plain text, overly permissive IAM
+variable "db_password" {
+  default = "hunter2"
+}
+
+resource "aws_iam_policy" "admin" {
+  policy = jsonencode({
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "*"
+      Resource = "*"
+    }]
+  })
+}
+
+# Good: secrets from vault, least-privilege IAM, encrypted state
+variable "db_password" {
+  type      = string
+  sensitive = true  # Prevents display in logs and plan output
+}
+
+data "aws_secretsmanager_secret_version" "db" {
+  secret_id = "prod/db/password"
+}
+
+resource "aws_iam_policy" "app" {
+  policy = jsonencode({
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:PutObject"]
+      Resource = "${aws_s3_bucket.data.arn}/*"
+    }]
+  })
+}
+
+# Encrypt state with OpenTofu
+terraform {
+  encryption {
+    key_provider "aws_kms" "main" {
+      kms_key_id = "alias/tofu-state"
+      region     = "us-east-1"
+    }
+    method "aes_gcm" "main" {
+      keys = key_provider.aws_kms.main
+    }
+    state {
+      method   = method.aes_gcm.main
+      enforced = true
+    }
+  }
+}
+```
+
+```bash
+# Scan for security issues
+tfsec .
+checkov -d .
+trivy config .
+```
+
+---
+
 # Linting and Formatting
 
 Before considering code complete, run the following tools on all changed files. If a tool is not installed, skip it and suggest the install command to the user.

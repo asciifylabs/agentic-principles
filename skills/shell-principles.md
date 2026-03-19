@@ -462,6 +462,162 @@ done
 
 ---
 
+# Use ShellCheck and shfmt
+
+> Run static analysis and formatting tools on all shell scripts to catch bugs, portability issues, and style inconsistencies.
+
+## Rules
+
+- Run `shellcheck` on all scripts before committing to catch common pitfalls
+- Use `shfmt` to enforce consistent formatting across the project
+- Address ShellCheck warnings; suppress only with inline comments and justification
+- Configure ShellCheck directives at the top of scripts for project-wide settings
+- Enable ShellCheck in your editor for real-time feedback
+- Run both tools in CI to block non-compliant code
+- Use `shfmt -d` in CI to check formatting without modifying files
+
+## Example
+
+```bash
+#!/bin/bash
+# shellcheck shell=bash
+# shellcheck disable=SC2034  # VAR appears unused but is exported by sourcing script
+
+# Run ShellCheck on a script
+shellcheck script.sh
+
+# Run ShellCheck on all scripts recursively
+find . -name '*.sh' -exec shellcheck {} +
+
+# Format a script in place
+shfmt -w -i 2 -ci script.sh
+
+# Check formatting without modifying (for CI)
+shfmt -d -i 2 -ci script.sh
+```
+
+```bash
+# Bad: ShellCheck would catch these
+echo $unquoted_var         # SC2086: Double quote to prevent globbing
+cat $file | grep pattern   # SC2002: Useless use of cat
+cd /some/dir               # SC2164: Use cd ... || exit
+
+# Good: ShellCheck-clean code
+echo "${unquoted_var}"
+grep pattern "$file"
+cd /some/dir || exit 1
+```
+
+---
+
+# Write Tests for Scripts
+
+> Test shell scripts with a testing framework to catch regressions and verify behavior across edge cases.
+
+## Rules
+
+- Use a shell testing framework (bats-core, shunit2, or shellspec) for structured tests
+- Test both success and failure paths, including edge cases and error conditions
+- Test scripts with different input combinations and environment configurations
+- Mock external commands when testing logic that depends on them
+- Run tests in CI on every change to shell scripts
+- Test exit codes, stdout, and stderr separately
+- Keep test scripts alongside the code they test
+
+## Example
+
+```bash
+# test/deploy.bats (using bats-core)
+#!/usr/bin/env bats
+
+setup() {
+    load 'test_helper/bats-support/load'
+    load 'test_helper/bats-assert/load'
+    export TEST_DIR="$(mktemp -d)"
+}
+
+teardown() {
+    rm -rf "$TEST_DIR"
+}
+
+@test "deploy.sh fails without required environment variable" {
+    unset DEPLOY_TARGET
+    run ./deploy.sh
+    assert_failure
+    assert_output --partial "DEPLOY_TARGET is required"
+}
+
+@test "deploy.sh validates target environment" {
+    export DEPLOY_TARGET="invalid"
+    run ./deploy.sh
+    assert_failure
+    assert_output --partial "must be one of: staging, production"
+}
+
+@test "deploy.sh succeeds with valid configuration" {
+    export DEPLOY_TARGET="staging"
+    export DRY_RUN=true
+    run ./deploy.sh
+    assert_success
+    assert_output --partial "Deploying to staging"
+}
+```
+
+```bash
+# Run bats tests
+bats test/
+
+# Run with TAP output for CI
+bats --formatter tap test/
+```
+
+---
+
+# Follow Security Best Practices
+
+> Write shell scripts that are resistant to injection, privilege escalation, and information leakage.
+
+## Rules
+
+- Never pass unsanitized input to `eval`, `source`, or command substitution
+- Use `--` to separate options from arguments when passing user input to commands
+- Avoid storing secrets in variables; use files with restricted permissions or environment variables from a secrets manager
+- Set restrictive `umask` (0077) before creating files with sensitive content
+- Drop privileges with `su` or `runuser` as soon as elevated access is no longer needed
+- Validate all inputs against expected patterns; reject anything unexpected
+- Use `mktemp` for temporary files; never use predictable filenames in `/tmp`
+
+## Example
+
+```bash
+# Bad: command injection via unsanitized input
+user_input="$1"
+eval "echo $user_input"           # Arbitrary command execution
+grep $user_input /etc/passwd      # Glob expansion, option injection
+
+# Good: safe input handling
+user_input="$1"
+
+# Validate input against expected pattern
+if [[ ! "$user_input" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    echo "Error: invalid input" >&2
+    exit 1
+fi
+
+# Use -- to prevent option injection
+grep -- "$user_input" /etc/passwd
+
+# Safe temporary file creation
+tmpfile="$(mktemp)" || exit 1
+trap 'rm -f "$tmpfile"' EXIT
+
+# Restrict permissions before writing secrets
+umask 0077
+echo "$secret_value" > "$tmpfile"
+```
+
+---
+
 # Linting and Formatting
 
 Before considering code complete, run the following tools on all changed files. If a tool is not installed, skip it and suggest the install command to the user.

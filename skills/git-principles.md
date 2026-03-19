@@ -208,3 +208,182 @@ API_KEY = os.environ["API_KEY"]
 - Look for and remove debug statements, TODO comments, and temporary code
 - Verify no unintended files (build artifacts, logs, IDE config) are staged
 - Check that the changes match the intent of the commit message
+
+---
+
+# Use Git Hooks for Automation
+
+> Leverage git hooks to enforce code quality and prevent bad commits before they enter the repository.
+
+## Rules
+
+- Use pre-commit hooks to run linters, formatters, and tests before commits
+- Use commit-msg hooks to enforce conventional commit message format
+- Use pre-push hooks to run full test suites before pushing
+- Share hook configurations via tools like pre-commit, husky, or lefthook
+- Never skip hooks with `--no-verify` unless there is a documented reason
+- Keep hooks fast to avoid slowing down the development workflow
+- Document required hooks in the project README or CONTRIBUTING guide
+
+## Example
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+```
+
+```bash
+# Install pre-commit hooks
+pre-commit install
+pre-commit install --hook-type commit-msg
+
+# Run hooks against all files
+pre-commit run --all-files
+```
+
+---
+
+# Write Meaningful PR Descriptions
+
+> Every pull request should clearly explain what changed, why, and how to verify it.
+
+## Rules
+
+- Include a summary of what the PR does and the motivation behind it
+- Link to relevant issues, tickets, or discussions
+- Describe how to test or verify the changes
+- Call out any breaking changes, migrations, or deployment steps
+- Keep PRs focused and small; split large changes into stacked PRs
+- Use PR templates to ensure consistent information across the team
+- Add screenshots or recordings for UI changes
+
+## Example
+
+```markdown
+## Summary
+- Add rate limiting middleware to the API gateway
+- Fixes #142 (API abuse from unauthenticated clients)
+
+## Changes
+- New `RateLimiter` middleware using token bucket algorithm
+- Redis-backed counter for distributed rate tracking
+- Returns 429 with Retry-After header when limit exceeded
+
+## Test plan
+- [ ] Unit tests for token bucket logic
+- [ ] Integration test with Redis
+- [ ] Load test confirming 429 responses above threshold
+```
+
+---
+
+# Keep a Clean History
+
+> Maintain a readable, linear git history that tells the story of the project's evolution.
+
+## Rules
+
+- Prefer rebase over merge to keep a linear history on feature branches
+- Squash fixup commits before merging to main
+- Never rewrite history on shared branches (main, develop, release)
+- Use `git commit --fixup` and `git rebase --autosquash` for corrections
+- Delete merged branches to keep the branch list clean
+- Avoid merge commits in feature branches; rebase onto the target branch instead
+- Each commit in the final history should compile and pass tests
+
+## Example
+
+```bash
+# Fixup a previous commit during development
+git commit --fixup=abc1234
+git rebase -i --autosquash main
+
+# Rebase feature branch onto latest main before merging
+git fetch origin
+git rebase origin/main
+
+# Delete merged branch
+git branch -d feature/my-feature
+git push origin --delete feature/my-feature
+```
+
+---
+
+# Sign Commits for Integrity
+
+> Use GPG or SSH signing to verify commit authorship and prevent impersonation.
+
+## Rules
+
+- Sign all commits with GPG or SSH keys
+- Configure `commit.gpgsign = true` in git config for automatic signing
+- Upload your public key to GitHub/GitLab for verified badges
+- Use SSH signing (`gpg.format = ssh`) for simpler key management
+- Require signed commits on protected branches via branch protection rules
+- Never share or commit private signing keys
+
+## Example
+
+```bash
+# Configure SSH signing (recommended)
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global commit.gpgsign true
+
+# Configure GPG signing
+git config --global user.signingkey YOUR_GPG_KEY_ID
+git config --global commit.gpgsign true
+
+# Verify a signed commit
+git log --show-signature -1
+
+# Sign a tag
+git tag -s v1.0.0 -m "Release v1.0.0"
+```
+
+---
+
+# Protect Branches
+
+> Use branch protection rules to enforce quality gates and prevent accidental or unauthorized changes to critical branches.
+
+## Rules
+
+- Enable branch protection on main, develop, and release branches
+- Require pull request reviews before merging
+- Require status checks (CI/CD) to pass before merging
+- Prevent force pushes to protected branches
+- Require branches to be up to date before merging
+- Enable CODEOWNERS files to enforce review from domain experts
+- Restrict who can push directly to protected branches
+
+## Example
+
+```bash
+# GitHub CLI: set branch protection
+gh api repos/{owner}/{repo}/branches/main/protection -X PUT -f \
+  required_status_checks='{"strict":true,"contexts":["ci/build","ci/test"]}' \
+  enforce_admins=true \
+  required_pull_request_reviews='{"required_approving_review_count":1}'
+```
+
+```text
+# CODEOWNERS
+* @team/backend
+/frontend/ @team/frontend
+/infra/ @team/platform
+*.tf @team/platform
+```

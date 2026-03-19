@@ -529,6 +529,114 @@ all:
 
 ---
 
+# Test with Molecule
+
+> Use Molecule to test Ansible roles in isolated environments before deploying to real infrastructure.
+
+## Rules
+
+- Write Molecule tests for every role
+- Test idempotency by running the converge step twice and checking for changes
+- Use Docker or Podman as the default driver for fast feedback loops
+- Include verify steps using Ansible assertions or Testinfra
+- Run Molecule tests in CI/CD pipelines to catch regressions
+- Test against multiple OS families (Debian, RHEL) when roles support them
+- Use `molecule test` for full lifecycle: create, converge, idempotence, verify, destroy
+
+## Example
+
+```bash
+# Initialize Molecule scenario for a role
+cd roles/nginx
+molecule init scenario --driver-name docker
+
+# Run full test lifecycle
+molecule test
+
+# Run only converge + verify for faster iteration
+molecule converge && molecule verify
+```
+
+```yaml
+# molecule/default/molecule.yml
+driver:
+  name: docker
+platforms:
+  - name: ubuntu
+    image: ubuntu:22.04
+    pre_build_image: true
+  - name: rocky
+    image: rockylinux:9
+    pre_build_image: true
+provisioner:
+  name: ansible
+verifier:
+  name: ansible
+
+# molecule/default/verify.yml
+- name: Verify nginx is running
+  hosts: all
+  tasks:
+    - name: Check nginx service
+      ansible.builtin.service_facts:
+
+    - name: Assert nginx is running
+      ansible.builtin.assert:
+        that:
+          - "'nginx.service' in services"
+          - "services['nginx.service'].state == 'running'"
+```
+
+---
+
+# Secure Playbook Execution
+
+> Harden Ansible execution to prevent privilege escalation, credential exposure, and unauthorized access.
+
+## Rules
+
+- Use `become` with the least privilege needed; avoid blanket `become: true` at playbook level
+- Never log sensitive data; use `no_log: true` on tasks that handle secrets
+- Encrypt all secrets with Ansible Vault; never store plaintext passwords or keys
+- Use SSH key-based authentication; disable password-based SSH access
+- Restrict `ansible_user` to service accounts with limited permissions
+- Validate downloaded content with checksums before executing
+- Use `--check` (dry-run) and `--diff` to audit changes before applying
+
+## Example
+
+```yaml
+# Bad: blanket become, logging secrets
+- name: Deploy app
+  hosts: all
+  become: true
+  tasks:
+    - name: Set database password
+      ansible.builtin.shell: "echo {{ db_password }}"
+
+# Good: targeted become, secrets protected
+- name: Deploy app
+  hosts: all
+  tasks:
+    - name: Set database password
+      ansible.builtin.copy:
+        content: "{{ db_password }}"
+        dest: /etc/app/db.conf
+        mode: "0600"
+        owner: app
+      become: true
+      become_user: app
+      no_log: true
+
+    - name: Download binary with checksum verification
+      ansible.builtin.get_url:
+        url: "https://releases.example.com/app-{{ version }}.tar.gz"
+        dest: /tmp/app.tar.gz
+        checksum: "sha256:{{ app_sha256 }}"
+```
+
+---
+
 # Linting and Formatting
 
 Before considering code complete, run the following tools on all changed files. If a tool is not installed, skip it and suggest the install command to the user.
