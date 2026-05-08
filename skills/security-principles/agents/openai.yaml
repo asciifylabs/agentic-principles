@@ -1,0 +1,6 @@
+interface:
+  display_name: "Security Principles"
+  short_description: "Secure coding and supply-chain checks"
+  default_prompt: "Use $security-principles to apply the relevant engineering standards to this task."
+policy:
+  allow_implicit_invocation: true

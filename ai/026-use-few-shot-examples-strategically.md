@@ -40,7 +40,7 @@ def classify_sentiment(text: str) -> str:
     ]
 
     return client.messages.create(
-        model="claude-haiku-4-5-20251001",
+        model="configured-fast-model",
         max_tokens=10,
         system="Classify text sentiment as exactly one of: positive, negative, neutral. Return only the label.",
         messages=messages,
@@ -58,7 +58,7 @@ def classify_with_dynamic_examples(text: str, example_store, k: int = 3) -> str:
     messages.append({"role": "user", "content": f"Classify sentiment: {text}"})
 
     return client.messages.create(
-        model="claude-haiku-4-5-20251001",
+        model="configured-fast-model",
         max_tokens=10,
         system="Classify text sentiment as exactly one of: positive, negative, neutral. Return only the label.",
         messages=messages,

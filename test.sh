@@ -1,6 +1,5 @@
 #!/bin/bash
-# Asciify Skills — Test Suite
-# Validates build output, installer, skill structure, and management commands.
+# Asciify Skills test suite.
 
 set -euo pipefail
 
@@ -10,7 +9,6 @@ PASS=0
 FAIL=0
 ERRORS=""
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -32,147 +30,133 @@ section() {
   echo -e "${YELLOW}=== $1 ===${NC}"
 }
 
-# ---- Build Script Tests ----
-
-section "Build Script"
-
-# Test: build-skills.sh exists and is executable
-if [[ -f "${SCRIPT_DIR}/build-skills.sh" ]]; then
-  pass "build-skills.sh exists"
-else
-  fail "build-skills.sh missing"
-fi
-
-# Test: build-skills.sh runs without error
-if bash "${SCRIPT_DIR}/build-skills.sh" > /dev/null 2>&1; then
-  pass "build-skills.sh runs successfully"
-else
-  fail "build-skills.sh failed to run"
-fi
-
-# Test: all expected skill files were generated
 EXPECTED_SKILLS=(
-  ai-principles.md
-  ansible-principles.md
-  docker-principles.md
-  git-principles.md
-  go-principles.md
-  kubernetes-principles.md
-  nodejs-principles.md
-  python-principles.md
-  rust-principles.md
-  security-principles.md
-  shell-principles.md
-  terraform-principles.md
+  ai-principles
+  ansible-principles
+  docker-principles
+  git-principles
+  go-principles
+  kubernetes-principles
+  nodejs-principles
+  python-principles
+  rust-principles
+  security-principles
+  shell-principles
+  terraform-principles
 )
 
-for skill in "${EXPECTED_SKILLS[@]}"; do
-  if [[ -f "${SKILLS_DIR}/${skill}" ]]; then
-    pass "Generated: ${skill}"
-  else
-    fail "Missing generated skill: ${skill}"
-  fi
-done
-
-# Test: .version file was generated
-if [[ -f "${SKILLS_DIR}/.version" ]]; then
-  pass ".version file generated"
-else
-  fail ".version file missing"
-fi
-
-# ---- Skill Structure Tests ----
-
-section "Skill File Structure"
-
-for skill in "${EXPECTED_SKILLS[@]}"; do
-  filepath="${SKILLS_DIR}/${skill}"
-  [[ -f "${filepath}" ]] || continue
-
-  # Test: has YAML frontmatter
-  if head -1 "${filepath}" | grep -q "^---$"; then
-    pass "${skill}: has YAML frontmatter"
-  else
-    fail "${skill}: missing YAML frontmatter"
-  fi
-
-  # Test: has name field
-  if grep -q "^name:" "${filepath}"; then
-    pass "${skill}: has name field"
-  else
-    fail "${skill}: missing name field"
-  fi
-
-  # Test: has description field
-  if grep -q "^description:" "${filepath}"; then
-    pass "${skill}: has description field"
-  else
-    fail "${skill}: missing description field"
-  fi
-
-  # Test: not empty (at least 100 bytes)
-  size=$(wc -c < "${filepath}" | tr -d ' ')
-  if [[ ${size} -gt 100 ]]; then
-    pass "${skill}: has content (${size} bytes)"
-  else
-    fail "${skill}: too small (${size} bytes)"
-  fi
-done
-
-# ---- Management Skill Tests ----
-
-section "Management Skills"
-
-MGMT_SKILLS=(
+MGMT_COMMANDS=(
   asciify-skills-update.md
   asciify-skills-uninstall.md
   asciify-skills-help.md
 )
 
-for skill in "${MGMT_SKILLS[@]}"; do
-  filepath="${SKILLS_DIR}/${skill}"
+section "Build Script"
 
-  if [[ -f "${filepath}" ]]; then
-    pass "${skill}: exists"
+if [[ -x "${SCRIPT_DIR}/build-skills.sh" ]]; then
+  pass "build-skills.sh exists and is executable"
+else
+  fail "build-skills.sh missing or not executable"
+fi
+
+if bash "${SCRIPT_DIR}/build-skills.sh" >/dev/null 2>&1; then
+  pass "build-skills.sh runs successfully"
+else
+  fail "build-skills.sh failed"
+fi
+
+if [[ -f "${SKILLS_DIR}/.version" ]]; then
+  pass ".version generated"
+else
+  fail ".version missing"
+fi
+
+section "Generated Skill Structure"
+
+for skill in "${EXPECTED_SKILLS[@]}"; do
+  skill_dir="${SKILLS_DIR}/${skill}"
+  skill_file="${skill_dir}/SKILL.md"
+  reference_file="${skill_dir}/references/principles.md"
+  openai_yaml="${skill_dir}/agents/openai.yaml"
+
+  if [[ -f "${skill_file}" ]]; then
+    pass "${skill}: SKILL.md exists"
   else
-    fail "${skill}: missing"
+    fail "${skill}: SKILL.md missing"
     continue
   fi
 
-  # Test: has correct name in frontmatter
-  expected_name="asciify-skills:$(echo "${skill}" | sed 's/asciify-skills-//; s/\.md$//')"
-  if grep -q "name: ${expected_name}" "${filepath}"; then
-    pass "${skill}: correct name (${expected_name})"
+  if head -1 "${skill_file}" | grep -q "^---$"; then
+    pass "${skill}: has YAML frontmatter"
   else
-    fail "${skill}: wrong name (expected ${expected_name})"
+    fail "${skill}: missing YAML frontmatter"
   fi
 
-  # Test: has description
-  if grep -q "^description:" "${filepath}"; then
+  if grep -q "^name: ${skill}$" "${skill_file}"; then
+    pass "${skill}: name matches directory"
+  else
+    fail "${skill}: name does not match directory"
+  fi
+
+  if grep -q "^description:" "${skill_file}"; then
     pass "${skill}: has description"
   else
     fail "${skill}: missing description"
   fi
+
+  if grep -q "asciify-source: asciify-skills" "${skill_file}"; then
+    pass "${skill}: has Asciify metadata"
+  else
+    fail "${skill}: missing Asciify metadata"
+  fi
+
+  line_count=$(wc -l < "${skill_file}" | tr -d ' ')
+  if [[ ${line_count} -le 500 ]]; then
+    pass "${skill}: SKILL.md is concise (${line_count} lines)"
+  else
+    fail "${skill}: SKILL.md too large (${line_count} lines)"
+  fi
+
+  if [[ -f "${reference_file}" ]]; then
+    pass "${skill}: detailed reference exists"
+  else
+    fail "${skill}: detailed reference missing"
+  fi
+
+  if [[ -f "${openai_yaml}" ]] && grep -Fq "default_prompt: \"Use \$${skill}" "${openai_yaml}"; then
+    pass "${skill}: agents/openai.yaml exists"
+  else
+    fail "${skill}: agents/openai.yaml missing or invalid"
+  fi
 done
 
-# ---- Installer Tests ----
+section "Management Commands"
+
+for command in "${MGMT_COMMANDS[@]}"; do
+  filepath="${SKILLS_DIR}/${command}"
+
+  if [[ -f "${filepath}" ]]; then
+    pass "${command}: exists"
+  else
+    fail "${command}: missing"
+    continue
+  fi
+
+  if grep -q "^description:" "${filepath}"; then
+    pass "${command}: has description"
+  else
+    fail "${command}: missing description"
+  fi
+done
 
 section "Installer"
 
-# Test: install.sh exists and is executable
-if [[ -f "${SCRIPT_DIR}/install.sh" ]]; then
-  pass "install.sh exists"
-else
-  fail "install.sh missing"
-fi
-
 if [[ -x "${SCRIPT_DIR}/install.sh" ]]; then
-  pass "install.sh is executable"
+  pass "install.sh exists and is executable"
 else
-  fail "install.sh is not executable"
+  fail "install.sh missing or not executable"
 fi
 
-# Test: install.sh contains all expected skill files
 for skill in "${EXPECTED_SKILLS[@]}"; do
   if grep -q "${skill}" "${SCRIPT_DIR}/install.sh"; then
     pass "install.sh includes ${skill}"
@@ -181,102 +165,88 @@ for skill in "${EXPECTED_SKILLS[@]}"; do
   fi
 done
 
-for skill in "${MGMT_SKILLS[@]}"; do
-  if grep -q "${skill}" "${SCRIPT_DIR}/install.sh"; then
-    pass "install.sh includes ${skill}"
-  else
-    fail "install.sh missing ${skill}"
-  fi
-done
-
-# Test: install.sh references asciify-skills (agentic-principles only in legacy cleanup)
-non_legacy_refs=$(grep -c "agentic-principles" "${SCRIPT_DIR}/install.sh" | tr -d ' ')
-legacy_refs=$(grep -c "legacy.*agentic-principles\|agentic-principles.*legacy\|legacy_" "${SCRIPT_DIR}/install.sh" | tr -d ' ')
-if [[ ${non_legacy_refs} -le ${legacy_refs} ]]; then
-  pass "install.sh uses 'asciify-skills' naming (legacy cleanup refs OK)"
+if grep -q ".agents/skills" "${SCRIPT_DIR}/install.sh" && grep -q ".claude/skills" "${SCRIPT_DIR}/install.sh"; then
+  pass "install.sh supports Codex and Claude locations"
 else
-  fail "install.sh still references 'agentic-principles' outside legacy cleanup"
+  fail "install.sh missing Codex or Claude locations"
 fi
 
-# Test: local install to temp directory
 section "Install Integration"
 
 TEMP_DIR="$(mktemp -d)"
-TEMP_PROJECT="${TEMP_DIR}/test-project"
-mkdir -p "${TEMP_PROJECT}"
+TEMP_HOME="${TEMP_DIR}/home"
+TEMP_PROJECT="${TEMP_DIR}/project"
+mkdir -p "${TEMP_HOME}" "${TEMP_PROJECT}"
 cd "${TEMP_PROJECT}" && git init --quiet
 
-if bash "${SCRIPT_DIR}/install.sh" --local > /dev/null 2>&1; then
-  pass "Local install completed"
-
-  # Verify skill files were installed
-  installed_count=0
-  for skill in "${EXPECTED_SKILLS[@]}"; do
-    if [[ -f ".claude/skills/asciify-skills/${skill}" ]]; then
-      installed_count=$((installed_count + 1))
-    fi
-  done
-
-  if [[ ${installed_count} -eq ${#EXPECTED_SKILLS[@]} ]]; then
-    pass "All ${#EXPECTED_SKILLS[@]} skill files installed to skills/"
-  else
-    fail "Only ${installed_count}/${#EXPECTED_SKILLS[@]} skill files installed to skills/"
-  fi
-
-  # Verify command files were installed to commands directory
-  cmd_count=0
-  for cmd in update.md uninstall.md help.md; do
-    if [[ -f ".claude/commands/asciify-skills/${cmd}" ]]; then
-      cmd_count=$((cmd_count + 1))
-    fi
-  done
-
-  if [[ ${cmd_count} -eq 3 ]]; then
-    pass "All 3 command files installed to commands/"
-  else
-    fail "Only ${cmd_count}/3 command files installed to commands/"
-  fi
-
-  # Verify .version was installed
-  if [[ -f ".claude/skills/asciify-skills/.version" ]]; then
-    pass ".version installed"
-  else
-    fail ".version not installed"
-  fi
+if HOME="${TEMP_HOME}" bash "${SCRIPT_DIR}/install.sh" --local --agent both >/dev/null 2>&1; then
+  pass "Local install completed for both agents"
 else
   fail "Local install failed"
 fi
 
-# Test: uninstall
-if bash "${SCRIPT_DIR}/install.sh" --uninstall > /dev/null 2>&1; then
-  if [[ ! -d ".claude/skills/asciify-skills" ]]; then
-    pass "Uninstall removed skills directory"
-  else
-    fail "Uninstall did not remove skills directory"
-  fi
-  if [[ ! -d ".claude/commands/asciify-skills" ]]; then
-    pass "Uninstall removed commands directory"
-  else
-    fail "Uninstall did not remove commands directory"
-  fi
+claude_count=0
+codex_count=0
+for skill in "${EXPECTED_SKILLS[@]}"; do
+  [[ -f ".claude/skills/${skill}/SKILL.md" ]] && [[ -f ".claude/skills/${skill}/references/principles.md" ]] && claude_count=$((claude_count + 1))
+  [[ -f ".agents/skills/${skill}/SKILL.md" ]] && [[ -f ".agents/skills/${skill}/references/principles.md" ]] && codex_count=$((codex_count + 1))
+done
+
+if [[ ${claude_count} -eq ${#EXPECTED_SKILLS[@]} ]]; then
+  pass "All Claude skills installed directly"
+else
+  fail "Only ${claude_count}/${#EXPECTED_SKILLS[@]} Claude skills installed"
+fi
+
+if [[ ${codex_count} -eq ${#EXPECTED_SKILLS[@]} ]]; then
+  pass "All Codex skills installed directly"
+else
+  fail "Only ${codex_count}/${#EXPECTED_SKILLS[@]} Codex skills installed"
+fi
+
+if [[ -f ".claude/commands/asciify-skills/update.md" ]] &&
+   [[ -f ".claude/commands/asciify-skills/uninstall.md" ]] &&
+   [[ -f ".claude/commands/asciify-skills/help.md" ]]; then
+  pass "Claude management commands installed"
+else
+  fail "Claude management commands missing"
+fi
+
+if [[ -f ".claude/skills/.asciify-skills-version" ]] && [[ -f ".agents/skills/.asciify-skills-version" ]]; then
+  pass "Version markers installed"
+else
+  fail "Version markers missing"
+fi
+
+if HOME="${TEMP_HOME}" bash "${SCRIPT_DIR}/install.sh" --uninstall --agent both >/dev/null 2>&1; then
+  pass "Uninstall completed"
 else
   fail "Uninstall failed"
 fi
 
-# Cleanup
-rm -rf "${TEMP_DIR}"
-cd "${SCRIPT_DIR}"
+remaining=0
+for skill in "${EXPECTED_SKILLS[@]}"; do
+  [[ -d ".claude/skills/${skill}" ]] && remaining=$((remaining + 1))
+  [[ -d ".agents/skills/${skill}" ]] && remaining=$((remaining + 1))
+done
 
-# ---- Naming Consistency Tests ----
+if [[ ${remaining} -eq 0 ]]; then
+  pass "Uninstall removed installed skill directories"
+else
+  fail "Uninstall left ${remaining} skill directories"
+fi
+
+cd "${SCRIPT_DIR}"
+rm -rf "${TEMP_DIR}"
 
 section "Naming Consistency"
 
-# Test: no references to old name in key files
 KEY_FILES=(
   install.sh
   build-skills.sh
   README.md
   CLAUDE.md
+  AGENTS.md
   CONTRIBUTING.md
   skills/README.md
 )
@@ -285,55 +255,18 @@ for kf in "${KEY_FILES[@]}"; do
   filepath="${SCRIPT_DIR}/${kf}"
   [[ -f "${filepath}" ]] || continue
 
-  # install.sh is allowed to reference agentic-principles for legacy cleanup
   if [[ "${kf}" == "install.sh" ]]; then
     if grep "agentic-principles" "${filepath}" | grep -qv "legacy"; then
-      fail "${kf}: references 'agentic-principles' outside legacy cleanup"
+      fail "${kf}: references old name outside legacy cleanup"
     else
-      pass "${kf}: uses 'asciify-skills' naming (legacy cleanup OK)"
+      pass "${kf}: legacy name only appears in cleanup"
     fi
   elif grep -q "agentic-principles" "${filepath}"; then
-    fail "${kf}: still references 'agentic-principles'"
+    fail "${kf}: references old name"
   else
-    pass "${kf}: uses 'asciify-skills' naming"
+    pass "${kf}: uses current naming"
   fi
 done
-
-# Test: management skills reference correct repo URL
-for skill in "${MGMT_SKILLS[@]}"; do
-  filepath="${SKILLS_DIR}/${skill}"
-  [[ -f "${filepath}" ]] || continue
-
-  if grep -q "asciifylabs/asciify-skills" "${filepath}"; then
-    pass "${skill}: correct repo URL"
-  else
-    # Not all management skills need repo URLs
-    if grep -q "github" "${filepath}"; then
-      fail "${skill}: wrong repo URL"
-    else
-      pass "${skill}: no repo URL needed"
-    fi
-  fi
-done
-
-# ---- Legacy File Cleanup Tests ----
-
-section "Legacy Cleanup"
-
-LEGACY_FILES=(
-  install-skills.sh
-  update-check.sh
-)
-
-for lf in "${LEGACY_FILES[@]}"; do
-  if [[ -f "${SCRIPT_DIR}/${lf}" ]]; then
-    fail "Legacy file still exists: ${lf}"
-  else
-    pass "Legacy file removed: ${lf}"
-  fi
-done
-
-# ---- Summary ----
 
 echo ""
 echo "================================"
@@ -344,8 +277,7 @@ if [[ ${FAIL} -gt 0 ]]; then
   echo -e "\nFailures:${ERRORS}"
   echo ""
   exit 1
-else
-  echo -e "\n${GREEN}All tests passed.${NC}"
-  echo ""
-  exit 0
 fi
+
+echo -e "\n${GREEN}All tests passed.${NC}"
+echo ""

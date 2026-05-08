@@ -4,17 +4,18 @@
 
 ## Rules
 
-- Run dependency vulnerability scans regularly: `npm audit`, `pip-audit`, `cargo audit`, `go vuln check`, `bundler-audit`
+- Run dependency vulnerability scans regularly: `npm audit` or package-manager equivalent, `pip-audit`, `cargo audit`, `govulncheck`, `bundler-audit`, or OSV/SCA tooling
 - Integrate dependency scanning into CI/CD pipelines — fail builds on critical or high severity vulnerabilities
 - Pin dependency versions in lock files (`package-lock.json`, `poetry.lock`, `go.sum`, `Cargo.lock`) and commit them
 - Review dependency updates before applying — use tools like Dependabot, Renovate, or Snyk for automated PRs
 - Remove unused dependencies — every dependency is an attack surface
 - Prefer well-maintained dependencies with active communities, frequent releases, and security policies
-- Verify package integrity: use checksum verification and package signing where available
+- Verify package integrity: use checksums, registry provenance, signed artifacts, and trusted publishers where available
 - Limit the number of transitive dependencies — prefer packages with fewer sub-dependencies
 - Never install packages from untrusted sources or registries
 - Establish a process for emergency patching when critical CVEs are disclosed in your dependencies
 - Use software composition analysis (SCA) tools to maintain a software bill of materials (SBOM)
+- Prefer builds that emit provenance attestations and align release workflows with SLSA/SSDF concepts when publishing artifacts
 
 ## Example
 
@@ -49,4 +50,5 @@ pip-audit                    # Python
 cargo audit                  # Rust
 govulncheck ./...            # Go
 bundler-audit check          # Ruby
+osv-scanner -r .             # Multi-ecosystem OSV database scan
 ```

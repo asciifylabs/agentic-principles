@@ -62,7 +62,7 @@ def analyze_image(file_bytes: bytes, content_type: str, prompt: str) -> str:
     clean_image = validate_image(file_bytes, content_type)
 
     response = client.messages.create(
-        model="claude-sonnet-4-5-20250929",
+        model="configured-default-model",
         max_tokens=1024,
         messages=[{
             "role": "user",

@@ -12,4 +12,8 @@ You MAY commit when the user asks you to. **Never run `git push`** — always le
 
 ## Coding Principles
 
-This repository provides coding principles as Claude Code skills. Each skill triggers automatically based on the code you're working with. The principles are non-negotiable coding standards — if you are about to write code that violates a principle, stop and fix it. When reviewing code, flag any violations.
+This repository provides coding principles as portable Agent Skills for Claude Code and Codex. Each generated skill has a compact `SKILL.md` entrypoint and a detailed `references/principles.md` file for examples and edge cases.
+
+- Rebuild generated skills with `bash build-skills.sh` after changing source principles
+- Run `bash test.sh` before committing generator, installer, or skill layout changes
+- Keep active `SKILL.md` content concise; put detailed guidance in references

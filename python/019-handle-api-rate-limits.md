@@ -21,7 +21,7 @@ import requests
 def call_api(prompt):
     response = requests.post(
         "https://api.openai.com/v1/chat/completions",
-        json={"model": "gpt-4", "messages": [{"role": "user", "content": prompt}]}
+        json={"model": "configured-openai-model", "messages": [{"role": "user", "content": prompt}]}
     )
     return response.json()  # Fails on rate limit
 
@@ -50,7 +50,7 @@ def call_api_with_retry(prompt: str) -> dict:
         "https://api.openai.com/v1/chat/completions",
         headers={"Authorization": f"Bearer {API_KEY}"},
         json={
-            "model": "gpt-4",
+            "model": "configured-openai-model",
             "messages": [{"role": "user", "content": prompt}]
         }
     )

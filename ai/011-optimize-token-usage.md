@@ -19,7 +19,7 @@
 # Bad: wasteful token usage
 def classify(text):
     return client.messages.create(
-        model="claude-opus-4-6",  # Overkill for classification
+        model="configured-reasoning-model",  # Overkill for classification
         max_tokens=4096,  # Only need a single word
         messages=[{
             "role": "user",
@@ -33,7 +33,7 @@ def classify(text):
 # Good: optimized token usage
 def classify(text: str) -> str:
     return client.messages.create(
-        model="claude-haiku-4-5-20251001",  # Fast, cheap model for simple task
+        model="configured-fast-model",  # Fast, cheap model for simple task
         max_tokens=20,  # Classification is a short response
         system="Classify text into exactly one category: billing, technical, general. Return only the category name.",
         messages=[{"role": "user", "content": text}],

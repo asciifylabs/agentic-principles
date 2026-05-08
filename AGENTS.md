@@ -12,4 +12,8 @@ You MAY commit when the user asks you to. **Never run `git push`** — always le
 
 ## Coding Principles
 
-This repository provides coding principles as skills. Install the skills for your AI coding agent to automatically apply language-specific coding standards, linting, and security scanning.
+This repository provides coding principles as portable Agent Skills for Claude Code and Codex. Source principles live in the top-level category directories. Generated skills live in `skills/<skill>/SKILL.md` with detailed references in `skills/<skill>/references/principles.md`.
+
+- Rebuild generated skills with `bash build-skills.sh` after changing source principles
+- Run `bash test.sh` before committing generator, installer, or skill layout changes
+- Keep `SKILL.md` files concise; move detailed examples to `references/principles.md`

@@ -50,7 +50,7 @@ app.post(
 
     // Call AI API server-side — key never leaves the backend
     const response = await client.messages.create({
-      model: "claude-sonnet-4-5-20250929",
+      model: "configured-default-model",
       max_tokens: 1024,
       messages: [{ role: "user", content: message }],
     });

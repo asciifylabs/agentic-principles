@@ -17,7 +17,7 @@
 
 ```python
 # Bad: one model for everything
-MODEL = "claude-opus-4-6"  # Expensive and slow for simple tasks
+MODEL = "most-capable-model"  # Expensive and slow for simple tasks
 
 def classify(text):
     return call_llm(MODEL, f"Classify: {text}")
@@ -26,6 +26,7 @@ def generate_report(data):
     return call_llm(MODEL, f"Generate report: {data}")
 
 # Good: task-appropriate model selection
+import os
 from enum import Enum
 
 class TaskComplexity(Enum):
@@ -34,9 +35,9 @@ class TaskComplexity(Enum):
     COMPLEX = "complex"  # Creative writing, multi-step reasoning, code generation
 
 MODEL_MAP = {
-    TaskComplexity.SIMPLE: "claude-haiku-4-5-20251001",
-    TaskComplexity.MODERATE: "claude-sonnet-4-5-20250929",
-    TaskComplexity.COMPLEX: "claude-opus-4-6",
+    TaskComplexity.SIMPLE: os.environ["LLM_SIMPLE_MODEL"],
+    TaskComplexity.MODERATE: os.environ["LLM_DEFAULT_MODEL"],
+    TaskComplexity.COMPLEX: os.environ["LLM_REASONING_MODEL"],
 }
 
 def get_model(complexity: TaskComplexity) -> str:

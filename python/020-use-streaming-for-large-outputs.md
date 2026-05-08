@@ -21,7 +21,7 @@ from openai import OpenAI
 client = OpenAI()
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="configured-openai-model",
     messages=[{"role": "user", "content": "Write a long story"}]
 )
 print(response.choices[0].message.content)  # User waits for entire response
@@ -32,7 +32,7 @@ from openai import OpenAI
 client = OpenAI()
 
 stream = client.chat.completions.create(
-    model="gpt-4",
+    model="configured-openai-model",
     messages=[{"role": "user", "content": "Write a long story"}],
     stream=True
 )
@@ -52,7 +52,7 @@ async def stream_response(prompt: str) -> str:
 
     try:
         async with client.messages.stream(
-            model="claude-3-5-sonnet-20241022",
+            model="configured-default-model",
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}]
         ) as stream:
@@ -86,7 +86,7 @@ async def chat_stream(prompt: str):
     async def generate():
         client = Anthropic()
         with client.messages.stream(
-            model="claude-3-5-sonnet-20241022",
+            model="configured-default-model",
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}]
         ) as stream:

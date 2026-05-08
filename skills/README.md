@@ -1,41 +1,46 @@
-# Asciify Skills
+# Asciify Skills Catalog
 
-These skills provide coding principles, linting, and security scanning for Claude Code.
+Generated Agent Skills for Claude Code and Codex.
+
+## Layout
+
+Each principle skill is a directory:
+
+```text
+<skill>/
+├── SKILL.md
+├── agents/openai.yaml
+└── references/principles.md
+```
+
+`SKILL.md` is the compact entrypoint. `references/principles.md` contains the full rule set and examples.
 
 ## Available Skills
 
-| Skill | Triggers On |
-|-------|------------|
-| `security-principles` | All code (always active) |
-| `docker-principles` | Dockerfile, docker-compose files, container configs |
-| `shell-principles` | .sh, .bash, Makefile, Dockerfile |
-| `go-principles` | .go, go.mod, go.sum |
-| `python-principles` | .py, pyproject.toml, requirements.txt |
-| `nodejs-principles` | .js, .ts, .tsx, package.json |
-| `rust-principles` | .rs, Cargo.toml |
-| `terraform-principles` | .tf, .tfvars (Terraform and OpenTofu) |
-| `ansible-principles` | playbooks, roles, ansible.cfg |
-| `kubernetes-principles` | Kubernetes manifests, Helm charts |
-| `ai-principles` | AI/ML code (OpenAI, Anthropic, LangChain, etc.) |
-| `git-principles` | Git operations and commits |
+| Skill | Scope |
+| --- | --- |
+| `ai-principles` | AI/ML, LLM, RAG, agents, evals, guardrails |
+| `ansible-principles` | Ansible playbooks, roles, inventories |
+| `docker-principles` | Dockerfiles, Compose, images, containers |
+| `git-principles` | Git operations, commits, pull requests |
+| `go-principles` | Go source, modules, tests |
+| `kubernetes-principles` | Kubernetes manifests and Helm charts |
+| `nodejs-principles` | JavaScript, TypeScript, package management |
+| `python-principles` | Python code, packaging, tests, linting |
+| `rust-principles` | Rust source, crates, tests |
+| `security-principles` | Secure coding and supply-chain review |
+| `shell-principles` | Shell scripts and Makefiles |
+| `terraform-principles` | Terraform and OpenTofu infrastructure code |
 
 ## Management Commands
 
-| Command | What it does |
-|---------|-------------|
-| `/asciify-skills:update` | Update to the latest version |
-| `/asciify-skills:uninstall` | Remove asciify-skills |
-| `/asciify-skills:help` | Show status and help |
+The `asciify-skills-*.md` files are Claude Code command prompts. They are installed into `.claude/commands/asciify-skills/` by `install.sh`.
 
-## What Each Skill Includes
+Codex does not use these command files; it uses the generated skills under `.agents/skills`.
 
-1. **Coding principles** — non-negotiable standards for that language/domain
-2. **Linting instructions** — which tools to run and how (language skills)
-3. **Security scanning** — trivy, semgrep, gitleaks, OWASP top 10 detection (security skill)
+## Rebuild
 
-## Rebuilding Skills
-
-If you modify the source principle files in the category directories, regenerate the skills:
+From the repository root:
 
 ```bash
 bash build-skills.sh

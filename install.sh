@@ -1,8 +1,8 @@
 #!/bin/bash
-# Asciify Skills — Installer
+# Asciify Skills installer
 # Usage:
-#   curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash
-#   Options: --global (default), --local, --uninstall
+#   install.sh [--global|--local] [--agent claude|codex|both]
+#   install.sh --uninstall [--agent claude|codex|both]
 
 set -euo pipefail
 
@@ -25,14 +25,12 @@ SKILL_NAMES=(
   terraform-principles
 )
 
-# Command files — installed to commands/ directory for slash command registration
 COMMAND_FILES=(
   asciify-skills-update.md
   asciify-skills-uninstall.md
   asciify-skills-help.md
 )
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -44,65 +42,73 @@ success() { echo -e "${GREEN}[OK]${NC} $*"; }
 warning() { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error()   { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
 
-# Parse arguments
 MODE=""
-INSTALL_DIR=""
-COMMANDS_DIR=""
+AGENT="both"
 
 while [[ $# -gt 0 ]]; do
-  case $1 in
+  case "$1" in
     --global)    MODE="global"; shift ;;
     --local)     MODE="local"; shift ;;
     --uninstall) MODE="uninstall"; shift ;;
-    *)           error "Unknown option: $1. Usage: $0 [--global|--local|--uninstall]" ;;
+    --agent)
+      [[ $# -ge 2 ]] || error "--agent requires claude, codex, or both"
+      AGENT="$2"
+      shift 2
+      ;;
+    --claude) AGENT="claude"; shift ;;
+    --codex)  AGENT="codex"; shift ;;
+    --both)   AGENT="both"; shift ;;
+    *)        error "Unknown option: $1. Usage: $0 [--global|--local|--uninstall] [--agent claude|codex|both]" ;;
   esac
 done
 
-# Determine install directory
-resolve_install_dir() {
-  case "${MODE}" in
-    global)
-      INSTALL_DIR="${HOME}/.claude/skills/asciify-skills"
-      COMMANDS_DIR="${HOME}/.claude/commands/asciify-skills"
-      ;;
-    local)
-      if [[ ! -d ".git" ]] && ! git rev-parse --is-inside-work-tree &>/dev/null; then
-        error "Not inside a git repository. --local must be run from a project root."
-      fi
-      INSTALL_DIR=".claude/skills/asciify-skills"
-      COMMANDS_DIR=".claude/commands/asciify-skills"
-      ;;
-    "")
-      echo ""
-      echo "Asciify Skills — Installer"
-      echo ""
-      echo "Where would you like to install?"
-      echo "  1) Global — all projects (~/.claude/skills/)"
-      echo "  2) Local  — this project only (.claude/skills/)"
-      echo ""
-      read -p "Select [1/2]: " -r choice
-      case "${choice}" in
-        1) MODE="global"; INSTALL_DIR="${HOME}/.claude/skills/asciify-skills"; COMMANDS_DIR="${HOME}/.claude/commands/asciify-skills" ;;
-        2) MODE="local"; INSTALL_DIR=".claude/skills/asciify-skills"; COMMANDS_DIR=".claude/commands/asciify-skills" ;;
-        *) error "Invalid choice" ;;
-      esac
-      ;;
+case "${AGENT}" in
+  claude|codex|both) ;;
+  *) error "Invalid agent '${AGENT}'. Expected claude, codex, or both." ;;
+esac
+
+SCRIPT_DIR=""
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+  candidate_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [[ -f "${candidate_dir}/skills/security-principles/SKILL.md" ]]; then
+    SCRIPT_DIR="${candidate_dir}"
+  fi
+fi
+
+agent_enabled() {
+  case "${AGENT}:$1" in
+    both:*|claude:claude|codex:codex) return 0 ;;
+    *) return 1 ;;
   esac
 }
 
-# Detect if running from a local copy of the repo
-SCRIPT_DIR=""
-if [[ -n "${BASH_SOURCE[0]:-}" ]] && [[ -f "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/skills/security-principles/SKILL.md" ]]; then
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-fi
+resolve_mode() {
+  case "${MODE}" in
+    global|local|uninstall) return 0 ;;
+    "")
+      echo ""
+      echo "Asciify Skills installer"
+      echo ""
+      echo "Where would you like to install?"
+      echo "  1) Global - all projects"
+      echo "  2) Local  - this project only"
+      echo ""
+      read -r -p "Select [1/2]: " choice
+      case "${choice}" in
+        1) MODE="global" ;;
+        2) MODE="local" ;;
+        *) error "Invalid choice" ;;
+      esac
+      ;;
+    *) error "Invalid mode '${MODE}'" ;;
+  esac
+}
 
-# Download a file from the repo (or copy from local source)
 download_file() {
   local path="$1"
   local dest="$2"
 
-  # Prefer local copy if running from the repo
-  if [[ -n "${SCRIPT_DIR}" ]] && [[ -f "${SCRIPT_DIR}/${path}" ]]; then
+  if [[ -n "${SCRIPT_DIR}" && -f "${SCRIPT_DIR}/${path}" ]]; then
     cp "${SCRIPT_DIR}/${path}" "${dest}"
     return 0
   fi
@@ -113,114 +119,161 @@ download_file() {
   fi
 }
 
-# Install skills
-do_install() {
-  info "Installing skills to ${INSTALL_DIR}..."
-  mkdir -p "${INSTALL_DIR}"
+install_skill_to_root() {
+  local root="$1"
+  local skill="$2"
+  local dest="${root}/${skill}"
+
+  mkdir -p "${dest}/references" "${dest}/agents"
+  download_file "skills/${skill}/SKILL.md" "${dest}/SKILL.md"
+  download_file "skills/${skill}/references/principles.md" "${dest}/references/principles.md"
+  download_file "skills/${skill}/agents/openai.yaml" "${dest}/agents/openai.yaml"
+
+  {
+    echo "repo=${REPO}"
+    echo "skill=${skill}"
+  } > "${dest}/.asciify-skills"
+}
+
+install_skills_root() {
+  local label="$1"
+  local root="$2"
+
+  info "Installing ${label} skills to ${root}"
+  mkdir -p "${root}"
 
   for skill in "${SKILL_NAMES[@]}"; do
-    mkdir -p "${INSTALL_DIR}/${skill}"
-    download_file "skills/${skill}/SKILL.md" "${INSTALL_DIR}/${skill}/SKILL.md"
-    success "Installed ${skill}"
+    install_skill_to_root "${root}" "${skill}"
+    success "Installed ${label} skill ${skill}"
   done
 
-  # Install version file
-  download_file "skills/.version" "${INSTALL_DIR}/.version"
+  download_file "skills/.version" "${root}/.asciify-skills-version"
+}
 
-  # Install slash commands to commands/ directory
-  info "Installing commands to ${COMMANDS_DIR}..."
-  mkdir -p "${COMMANDS_DIR}"
+install_claude_commands() {
+  local commands_dir="$1"
+
+  info "Installing Claude commands to ${commands_dir}"
+  mkdir -p "${commands_dir}"
 
   for cmd in "${COMMAND_FILES[@]}"; do
-    # Strip the "asciify-skills-" prefix for the destination filename
-    # e.g. asciify-skills-update.md -> update.md
     local dest_name="${cmd#asciify-skills-}"
-    download_file "skills/${cmd}" "${COMMANDS_DIR}/${dest_name}"
+    download_file "skills/${cmd}" "${commands_dir}/${dest_name}"
     success "Installed command ${dest_name}"
   done
-
-  echo ""
-  success "Asciify Skills installed!"
-  echo ""
-  info "Skills location: ${INSTALL_DIR}"
-  info "Commands location: ${COMMANDS_DIR}"
-  info "Skills activate automatically based on the files you work with."
-  echo ""
-  info "Management commands (inside Claude Code):"
-  info "  /asciify-skills:update      — update to the latest version"
-  info "  /asciify-skills:uninstall   — remove asciify-skills"
-  info "  /asciify-skills:help        — show status and help"
 }
 
-# Uninstall
+do_install() {
+  resolve_mode
+
+  if [[ "${MODE}" == "local" ]]; then
+    if [[ ! -d ".git" ]] && ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      error "Not inside a git repository. --local must be run from a project."
+    fi
+  fi
+
+  if agent_enabled claude; then
+    if [[ "${MODE}" == "global" ]]; then
+      install_skills_root "Claude" "${HOME}/.claude/skills"
+      install_claude_commands "${HOME}/.claude/commands/asciify-skills"
+    else
+      install_skills_root "Claude" ".claude/skills"
+      install_claude_commands ".claude/commands/asciify-skills"
+    fi
+  fi
+
+  if agent_enabled codex; then
+    if [[ "${MODE}" == "global" ]]; then
+      install_skills_root "Codex" "${HOME}/.agents/skills"
+    else
+      install_skills_root "Codex" ".agents/skills"
+    fi
+  fi
+
+  echo ""
+  success "Asciify Skills installed for ${AGENT} (${MODE})."
+  echo ""
+  if agent_enabled claude; then
+    info "Claude scans ~/.claude/skills for global skills and .claude/skills for project skills."
+  fi
+  if agent_enabled codex; then
+    info "Codex scans ~/.agents/skills for user skills and .agents/skills in repositories."
+  fi
+}
+
+skill_is_asciify() {
+  local dir="$1"
+
+  [[ -f "${dir}/.asciify-skills" ]] && return 0
+  [[ -f "${dir}/SKILL.md" ]] && grep -q "asciify-source: asciify-skills" "${dir}/SKILL.md"
+}
+
+remove_skills_root() {
+  local label="$1"
+  local root="$2"
+  local removed=false
+
+  [[ -d "${root}" ]] || return 0
+
+  for skill in "${SKILL_NAMES[@]}"; do
+    local dir="${root}/${skill}"
+    if [[ -d "${dir}" ]] && skill_is_asciify "${dir}"; then
+      rm -rf "${dir}"
+      success "Removed ${label} skill ${skill}"
+      removed=true
+    fi
+  done
+
+  rm -f "${root}/.asciify-skills-version" 2>/dev/null || true
+
+  local legacy_group="${root}/asciify-skills"
+  if [[ -d "${legacy_group}" ]]; then
+    rm -rf "${legacy_group}"
+    success "Removed legacy grouped install ${legacy_group}"
+    removed=true
+  fi
+
+  if [[ "${removed}" == false ]]; then
+    info "No ${label} skills found in ${root}"
+  fi
+}
+
+remove_dir_if_exists() {
+  local label="$1"
+  local dir="$2"
+
+  if [[ -d "${dir}" ]]; then
+    rm -rf "${dir}"
+    success "Removed ${label} ${dir}"
+  fi
+}
+
 do_uninstall() {
-  info "Uninstalling Asciify Skills..."
+  info "Uninstalling Asciify Skills for ${AGENT}"
 
-  local found=false
-
-  # Check global install
-  local global_dir="${HOME}/.claude/skills/asciify-skills"
-  local global_cmds="${HOME}/.claude/commands/asciify-skills"
-  if [[ -d "${global_dir}" ]]; then
-    rm -rf "${global_dir}"
-    success "Removed global skills from ${global_dir}"
-    found=true
-  fi
-  if [[ -d "${global_cmds}" ]]; then
-    rm -rf "${global_cmds}"
-    success "Removed global commands from ${global_cmds}"
-    found=true
+  if agent_enabled claude; then
+    remove_skills_root "Claude" "${HOME}/.claude/skills"
+    remove_skills_root "Claude" ".claude/skills"
+    remove_dir_if_exists "Claude commands" "${HOME}/.claude/commands/asciify-skills"
+    remove_dir_if_exists "Claude commands" ".claude/commands/asciify-skills"
   fi
 
-  # Check local install
-  local local_dir=".claude/skills/asciify-skills"
-  local local_cmds=".claude/commands/asciify-skills"
-  if [[ -d "${local_dir}" ]]; then
-    rm -rf "${local_dir}"
-    success "Removed local skills from ${local_dir}"
-    found=true
-  fi
-  if [[ -d "${local_cmds}" ]]; then
-    rm -rf "${local_cmds}"
-    success "Removed local commands from ${local_cmds}"
-    found=true
+  if agent_enabled codex; then
+    remove_skills_root "Codex" "${HOME}/.agents/skills"
+    remove_skills_root "Codex" ".agents/skills"
   fi
 
-  # Clean up legacy agentic-principles install if present
-  local legacy_global="${HOME}/.claude/skills/agentic-principles"
-  local legacy_local=".claude/skills/agentic-principles"
+  # Legacy pre-rename cleanup.
+  remove_dir_if_exists "legacy global skills" "${HOME}/.claude/skills/agentic-principles"
+  remove_dir_if_exists "legacy local skills" ".claude/skills/agentic-principles"
   local legacy_hook="${HOME}/.claude/scripts/agentic-principles-update-check.sh"
   local legacy_version="${HOME}/.claude/scripts/.agentic-principles-version"
-
-  if [[ -d "${legacy_global}" ]]; then
-    rm -rf "${legacy_global}"
-    success "Removed legacy install from ${legacy_global}"
-    found=true
-  fi
-  if [[ -d "${legacy_local}" ]]; then
-    rm -rf "${legacy_local}"
-    success "Removed legacy install from ${legacy_local}"
-    found=true
-  fi
   rm -f "${legacy_hook}" "${legacy_version}" 2>/dev/null || true
 
-  if [[ "${found}" == false ]]; then
-    info "No installation found — nothing to remove."
-  else
-    echo ""
-    success "Asciify Skills uninstalled."
-  fi
+  success "Asciify Skills uninstall complete."
 }
 
-# Main
-main() {
-  resolve_install_dir
-
-  case "${MODE}" in
-    global|local) do_install ;;
-    uninstall)    do_uninstall ;;
-    *)            error "Unknown mode: ${MODE}" ;;
-  esac
-}
-
-main
+case "${MODE}" in
+  uninstall) do_uninstall ;;
+  *) do_install ;;
+esac

@@ -10,7 +10,7 @@
 - Use `sensitive = true` on variables and outputs that contain secrets
 - Enable encryption at rest and in transit for all storage and database resources
 - Apply least-privilege IAM policies; never use wildcard (`*`) permissions in production
-- Run security scanners (tfsec, Checkov, trivy) in CI to catch misconfigurations
+- Run security scanners and policy checks (Trivy, Checkov, Conftest/OPA, or the project's standard tool) in CI to catch misconfigurations
 
 ## Example
 
@@ -70,7 +70,7 @@ terraform {
 
 ```bash
 # Scan for security issues
-tfsec .
 checkov -d .
 trivy config .
+conftest test --policy policy/ tfplan.json
 ```

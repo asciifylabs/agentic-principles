@@ -19,7 +19,7 @@
 // Bad: blocking call — user stares at a spinner for 5+ seconds
 app.post("/chat", async (req, res) => {
   const response = await client.messages.create({
-    model: "claude-sonnet-4-5-20250929",
+    model: "configured-default-model",
     max_tokens: 1024,
     messages: req.body.messages,
   });
@@ -35,7 +35,7 @@ app.post("/chat", async (req, res) => {
   let fullResponse = "";
 
   const stream = client.messages.stream({
-    model: "claude-sonnet-4-5-20250929",
+    model: "configured-default-model",
     max_tokens: 1024,
     messages: req.body.messages,
   });

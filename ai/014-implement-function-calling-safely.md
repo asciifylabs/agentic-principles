@@ -23,7 +23,7 @@ def handle_tool_call(name, args):
     return func(**args)
 
 # Good: allowlisted tools with validation and limits
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 class SearchArgs(BaseModel):
     query: str = Field(max_length=200)
@@ -55,9 +55,9 @@ def handle_tool_call(name: str, raw_args: dict, call_count: int) -> dict:
         return {"error": f"Invalid arguments: {e}"}
 
     if tool["needs_confirmation"]:
-        return {"status": "awaiting_confirmation", "tool": name, "args": validated_args.dict()}
+        return {"status": "awaiting_confirmation", "tool": name, "args": validated_args.model_dump()}
 
-    result = tool["fn"](**validated_args.dict())
-    logger.info("tool_executed", tool=name, args=validated_args.dict())
+    result = tool["fn"](**validated_args.model_dump())
+    logger.info("tool_executed", tool=name, args=validated_args.model_dump())
     return {"result": result}
 ```

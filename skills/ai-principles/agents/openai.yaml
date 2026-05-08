@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Principles"
+  short_description: "AI safety, evals, RAG, and agents"
+  default_prompt: "Use $ai-principles to apply the relevant engineering standards to this task."
+policy:
+  allow_implicit_invocation: true

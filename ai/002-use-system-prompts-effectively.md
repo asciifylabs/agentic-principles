@@ -18,7 +18,7 @@
 ```python
 # Bad: no system prompt, all instructions in user message
 response = client.messages.create(
-    model="claude-sonnet-4-5-20250929",
+    model="configured-default-model",
     messages=[{
         "role": "user",
         "content": "You are a helpful assistant. Be concise. Extract the name and email. John Doe john@example.com"
@@ -40,7 +40,7 @@ SYSTEM_PROMPT = """You are a data extraction specialist.
 </output_format>"""
 
 response = client.messages.create(
-    model="claude-sonnet-4-5-20250929",
+    model="configured-default-model",
     max_tokens=256,
     system=SYSTEM_PROMPT,
     messages=[{

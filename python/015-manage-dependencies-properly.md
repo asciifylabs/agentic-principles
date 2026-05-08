@@ -1,16 +1,16 @@
 # Manage Dependencies Properly
 
-> Use modern dependency management tools and lock files to ensure reproducible builds and avoid version conflicts.
+> Use modern dependency management tools, `pyproject.toml`, and lock files to ensure reproducible builds and avoid version conflicts.
 
 ## Rules
 
-- Use `requirements.txt` for simple projects, Poetry or PDM for complex projects
-- Always pin dependencies with exact versions in production (`==` not `>=`)
-- Use separate requirements files: `requirements.txt`, `requirements-dev.txt`, `requirements-test.txt`
-- Generate lock files to ensure reproducible builds across environments
-- Specify Python version requirements in `pyproject.toml` or `README.md`
-- Regularly update dependencies and check for security vulnerabilities with tools like `pip-audit`
-- Use dependency groups in Poetry to separate dev, test, and production dependencies
+- Use `pyproject.toml` as the default project metadata and tool configuration file
+- Prefer a lock-capable workflow such as uv, Poetry, PDM, or pip-tools for applications
+- For libraries, define compatible dependency ranges; for applications, deploy from a lock file or hash-pinned requirements
+- Keep dependency groups separate for runtime, development, tests, and tooling
+- Specify supported Python versions in `requires-python`
+- Run vulnerability checks with `pip-audit`, `uv pip audit`, or the project's configured SCA tool
+- Update dependencies deliberately through reviewed PRs, not ad hoc local installs
 
 ## Example
 
@@ -20,30 +20,24 @@ requests
 flask
 numpy
 
-# Good: pinned dependencies with hashes
-# requirements.txt
-requests==2.31.0 \
-    --hash=sha256:942c5a758f98d56f5a05c4
-flask==3.0.0 \
-    --hash=sha256:ceb27b0af3823b722842c8e3
-numpy==1.26.2 \
-    --hash=sha256:3ab67b7b2e0c82e8a9a
-
-# Generate requirements with hashes
-pip freeze > requirements.txt
+# Good: generate locked, hash-pinned requirements
 pip-compile --generate-hashes requirements.in
 
-# Good: using Poetry
+# Good: using pyproject.toml with dependency groups
 # pyproject.toml
-[tool.poetry.dependencies]
-python = "^3.10"
-requests = "^2.31.0"
-flask = "^3.0.0"
+[project]
+requires-python = ">=3.12"
+dependencies = [
+  "requests>=2.32,<3",
+  "flask>=3.0,<4",
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.0"
-black = "^23.0.0"
-mypy = "^1.5.0"
+[dependency-groups]
+dev = [
+  "pytest",
+  "ruff",
+  "pyright",
+]
 ```
 
 **Best practices:**
@@ -52,13 +46,18 @@ mypy = "^1.5.0"
 # Install from lock file
 pip install -r requirements.txt
 
-# Or with Poetry
-poetry install --no-root
+# Or with uv
+uv sync --locked
+
+# Or with Poetry / PDM, depending on the project
+poetry install --sync
+pdm sync --frozen-lockfile
 
 # Check for vulnerabilities
 pip-audit
+uv pip audit
 
 # Update dependencies safely
-pip list --outdated
+uv lock --upgrade-package requests
 poetry update --dry-run
 ```

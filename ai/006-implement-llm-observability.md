@@ -19,7 +19,7 @@
 # Bad: no observability
 def ask(question):
     return client.messages.create(
-        model="claude-sonnet-4-5-20250929",
+        model="configured-default-model",
         messages=[{"role": "user", "content": question}],
     ).content[0].text
 
@@ -31,7 +31,7 @@ logger = structlog.get_logger("llm")
 
 def ask(question: str, trace_id: str | None = None) -> str:
     start = time.monotonic()
-    model = "claude-sonnet-4-5-20250929"
+    model = "configured-default-model"
 
     try:
         response = client.messages.create(

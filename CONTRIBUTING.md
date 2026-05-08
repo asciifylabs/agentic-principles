@@ -1,13 +1,13 @@
 # Contributing to Asciify Skills
 
-Thanks for your interest in contributing! This project thrives on community input — whether it's fixing a typo, improving an existing principle, or adding support for a new technology.
+Thanks for your interest in contributing. This project accepts fixes to source principles, generated skill layout, installer behavior, and documentation for Claude Code and Codex.
 
 ## Ways to Contribute
 
 - **Improve existing principles** — clarify wording, add better examples, fix inaccuracies
 - **Add new principles** — for existing or new technology categories
-- **Report issues** — found a bug in the install script? Let us know
-- **Suggest features** — ideas for new technology detection, formatting tools, or workflow improvements
+- **Report issues** — found a bug in the install script or generated skill layout? Let us know
+- **Suggest features** — ideas for new categories, validation tools, or workflow improvements
 
 ## Adding a New Principle
 
@@ -18,16 +18,19 @@ Thanks for your interest in contributing! This project thrives on community inpu
    - Summary quote block
    - Rules (bullet list)
    - Examples (code blocks with bad/good patterns)
-4. Add the principle to the table in `README.md`
+4. Run `bash build-skills.sh`
+5. Run `bash test.sh`
 
 ## Adding a New Technology Category
 
 1. Create a new directory at the repo root (e.g., `java/`)
 2. Add a trigger entry in `build-skills.sh` (`get_trigger` function)
 3. Add at least 5 initial principles
-4. Run `./build-skills.sh` to generate the skill file
-5. Add the skill to `SKILL_FILES` in `install.sh`
-6. Add the category to `README.md` (skills table, supported technologies, and principles reference)
+4. Add a path entry in `build-skills.sh` (`get_paths` function) when file-based activation is useful for Claude Code
+5. Add a checklist in `build-skills.sh` (`generate_core_checklist` and `generate_validation_section`)
+6. Add the skill name to `SKILL_NAMES` in `install.sh`
+7. Update `README.md`, `skills/README.md`, and `test.sh`
+8. Run `bash build-skills.sh` and `bash test.sh`
 
 ## Development Setup
 
@@ -36,10 +39,10 @@ git clone https://github.com/asciifylabs/asciify-skills.git
 cd asciify-skills
 
 # Build skill files from source principles
-./build-skills.sh
+bash build-skills.sh
 
-# Test installation locally
-bash install.sh --local
+# Test installation locally for both supported agents
+bash install.sh --local --agent both
 
 # Run tests
 bash test.sh
@@ -55,6 +58,7 @@ bash test.sh
 ## Code Style
 
 - Principles are written in Markdown with consistent formatting
+- Generated `SKILL.md` files should stay concise; detailed examples belong in `references/principles.md`
 - Shell scripts follow the project's own shell scripting principles (`shell/`)
 - Use `shellcheck` and `shfmt` for any script changes
 

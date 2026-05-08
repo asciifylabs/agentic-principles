@@ -19,7 +19,7 @@
 ```python
 # Bad: model config scattered across code with no versioning
 response = client.messages.create(
-    model="claude-sonnet-4-5-20250929",
+    model="configured-default-model",
     temperature=0.7,
     messages=messages,
 )
@@ -45,14 +45,14 @@ class ModelConfig:
 CONFIGS = {
     "summarizer-v1.0": ModelConfig(
         version="1.0",
-        model_id="claude-sonnet-4-5-20250929",
+        model_id="configured-default-model",
         system_prompt="Summarize concisely in 2-3 sentences.",
         temperature=0.3,
         max_tokens=256,
     ),
     "summarizer-v1.1": ModelConfig(
         version="1.1",
-        model_id="claude-sonnet-4-5-20250929",
+        model_id="configured-default-model",
         system_prompt="Summarize in 2-3 sentences. Focus on actionable insights.",
         temperature=0.2,
         max_tokens=256,

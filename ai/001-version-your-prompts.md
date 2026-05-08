@@ -19,7 +19,7 @@
 # Bad: hardcoded prompt buried in application code
 def summarize(text):
     response = client.messages.create(
-        model="claude-sonnet-4-5-20250929",
+        model="configured-default-model",
         messages=[{"role": "user", "content": f"Summarize: {text}"}],
     )
     return response.content[0].text
@@ -42,7 +42,7 @@ def summarize(text: str, prompt_version: str = "summarize") -> str:
     logger.info("prompt_used", version=prompt["version"], name=prompt_version)
 
     response = client.messages.create(
-        model="claude-sonnet-4-5-20250929",
+        model="configured-default-model",
         system=prompt["system"],
         messages=[{"role": "user", "content": prompt["template"].format(document=text)}],
     )

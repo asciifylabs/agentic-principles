@@ -4,13 +4,14 @@
 
 ## Rules
 
-- Validate manifests against Kubernetes schemas using kubeconform or kubeval
+- Validate manifests against Kubernetes schemas using kubeconform
 - Use Helm unit tests (helm-unittest) to verify template rendering
-- Run policy checks with OPA/Gatekeeper, Kyverno, or Datree in CI
+- Run policy checks with Kyverno, OPA/Gatekeeper, Conftest, or the platform's admission policy tooling in CI
 - Test Helm values across environments (dev, staging, prod) to catch drift
 - Use `helm template` to render and inspect output before installing
 - Test deployments in ephemeral namespaces or Kind/k3d clusters in CI
 - Validate CRDs and custom resources against their schemas
+- Validate security posture against the Kubernetes Pod Security Standards used by the cluster
 
 ## Example
 

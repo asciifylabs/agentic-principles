@@ -1,248 +1,182 @@
 # Troubleshooting Guide
 
-Common issues and solutions for Asciify Skills.
-
-## Table of Contents
-
-- [Skills Not Loading](#skills-not-loading)
-- [Slash Commands Not Available](#slash-commands-not-available)
-- [Installation Issues](#installation-issues)
-- [Update Issues](#update-issues)
-- [Formatting Tools Not Found](#formatting-tools-not-found)
-- [Wrong Skills Activating](#wrong-skills-activating)
-
----
+Common issues and fixes for Asciify Skills on Claude Code and Codex.
 
 ## Skills Not Loading
 
-**Symptoms:**
+Check the install location for your agent:
 
-- Claude doesn't follow coding principles
-- No skill-related behavior when editing code
+```bash
+# Claude Code global
+ls ~/.claude/skills/python-principles/SKILL.md
 
-**Solutions:**
+# Claude Code project
+ls .claude/skills/python-principles/SKILL.md
 
-1. **Check installation location:**
+# Codex global
+ls ~/.agents/skills/python-principles/SKILL.md
 
-   ```bash
-   # Global install:
-   ls ~/.claude/skills/asciify-skills/
-   # Local install:
-   ls .claude/skills/asciify-skills/
-   ```
+# Codex project
+ls .agents/skills/python-principles/SKILL.md
+```
 
-2. **Verify skill files exist:**
+Verify frontmatter:
 
-   ```bash
-   ls ~/.claude/skills/asciify-skills/*.md
-   # Should list 11 principle files + 3 management skills
-   ```
+```bash
+head -12 ~/.claude/skills/python-principles/SKILL.md
+head -12 ~/.agents/skills/python-principles/SKILL.md
+```
 
-3. **Check skill frontmatter:**
+Reinstall:
 
-   ```bash
-   head -4 ~/.claude/skills/asciify-skills/python-principles.md
-   # Should show:
-   # ---
-   # name: python-principles
-   # description: "Use when writing..."
-   # ---
-   ```
+```bash
+curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --global --agent both
+```
 
-4. **Reinstall:**
+Claude Code may detect edits live. Codex may need a restart if a newly installed skill does not appear.
 
-   ```bash
-   curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --global
-   ```
+## Claude Commands Not Available
 
----
+The management commands are Claude-only command prompts.
 
-## Slash Commands Not Available
+Check:
 
-**Symptoms:**
+```bash
+ls ~/.claude/commands/asciify-skills/
+ls .claude/commands/asciify-skills/
+```
 
-- `/asciify-skills:update` not recognized
-- `/asciify-skills:help` not available
+Expected files:
 
-**Solutions:**
+```text
+update.md
+uninstall.md
+help.md
+```
 
-1. **Verify management skills are installed:**
+Restart Claude Code if the commands were installed after the session started.
 
-   ```bash
-   ls ~/.claude/skills/asciify-skills/asciify-skills-*.md
-   # Should list: update.md, uninstall.md, help.md
-   ```
+## Codex Skill Invocation
 
-2. **Check skill name format:**
+Codex uses skills from `.agents/skills` and can invoke them implicitly from the description or explicitly with `$skill-name`.
 
-   ```bash
-   grep "^name:" ~/.claude/skills/asciify-skills/asciify-skills-update.md
-   # Should show: name: asciify-skills:update
-   ```
+Example:
 
-3. **Start a new Claude Code session** — skills are loaded at session start.
+```text
+$python-principles review the changes in this package
+```
 
----
+If a skill does not appear, check `~/.agents/skills/<skill>/SKILL.md` or `.agents/skills/<skill>/SKILL.md` and restart Codex.
 
 ## Installation Issues
 
-**Symptoms:**
+Check required tools:
 
-- Install script fails
-- Permission errors
-- Network errors
+```bash
+command -v bash
+command -v curl
+command -v git
+```
 
-**Solutions:**
+For local installs, run inside a Git repository:
 
-1. **Check curl is available:**
+```bash
+git rev-parse --is-inside-work-tree
+```
 
-   ```bash
-   command -v curl
-   ```
+Install from a local clone when network access to raw GitHub URLs is blocked:
 
-2. **Check write permissions:**
+```bash
+git clone https://github.com/asciifylabs/asciify-skills.git /tmp/asciify-skills
+bash /tmp/asciify-skills/install.sh --global --agent both
+```
 
-   ```bash
-   # For global install:
-   mkdir -p ~/.claude/skills/asciify-skills && echo "OK"
+Behind a corporate proxy:
 
-   # For local install (must be in a git repo):
-   git rev-parse --is-inside-work-tree
-   ```
-
-3. **Install from local clone:**
-
-   ```bash
-   git clone https://github.com/asciifylabs/asciify-skills.git /tmp/asciify-skills
-   bash /tmp/asciify-skills/install.sh --global
-   ```
-
-4. **Corporate firewall:**
-
-   ```bash
-   # If behind a proxy:
-   export https_proxy=http://proxy.example.com:8080
-   curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --global
-   ```
-
----
+```bash
+export https_proxy=http://proxy.example.com:8080
+curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --global --agent both
+```
 
 ## Update Issues
 
-**Symptoms:**
+Check GitHub connectivity:
 
-- `/asciify-skills:update` fails
-- Cannot download latest version
+```bash
+curl -I https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/skills/.version
+```
 
-**Solutions:**
+Check installed version markers:
 
-1. **Check GitHub connectivity:**
+```bash
+cat ~/.claude/skills/.asciify-skills-version
+cat ~/.agents/skills/.asciify-skills-version
+```
 
-   ```bash
-   curl -I https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/skills/.version
-   ```
+Update by running the installer again:
 
-2. **Update manually:**
-
-   ```bash
-   curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --global
-   ```
-
-3. **Check current version:**
-
-   ```bash
-   cat ~/.claude/skills/asciify-skills/.version
-   ```
-
----
+```bash
+curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --global --agent both
+```
 
 ## Formatting Tools Not Found
 
-**Symptoms:**
+Skills prefer project scripts and existing CI commands. If a fallback tool is missing, install the tool or note that validation was skipped.
 
-- Claude mentions a tool but it's not installed
-- Linting steps skipped
-
-**Solutions:**
-
-Skills will suggest install commands for missing tools. Common installations:
+Common tools:
 
 ```bash
-# macOS (via Homebrew):
+# Shell
 brew install shellcheck shfmt
 
-# Python:
-pip install ruff
+# Python
+pipx install ruff
+pipx install pip-audit
 
-# Node.js:
-npm install -g eslint prettier
-
-# Go:
-go install golang.org/x/tools/cmd/goimports@latest
+# Go
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+go install golang.org/x/vuln/cmd/govulncheck@latest
 
-# Rust:
+# Rust
 rustup component add rustfmt clippy
+cargo install cargo-audit cargo-deny
 
-# Terraform/OpenTofu:
-brew install tflint
+# Infrastructure and security
+brew install tflint trivy gitleaks
 ```
-
----
 
 ## Wrong Skills Activating
 
-**Symptoms:**
+Skill matching is description-driven in both agents. Claude Code can also use `paths` from frontmatter. If activation is noisy:
 
-- Unexpected principles applied
-- Missing expected principles
+```bash
+grep "^description:" ~/.claude/skills/*-principles/SKILL.md
+grep "^paths:" ~/.claude/skills/*-principles/SKILL.md
+```
 
-**Solutions:**
+Remove an Asciify skill by deleting its directory:
 
-Skills activate based on file types. If the wrong skill is loading:
+```bash
+rm -rf ~/.claude/skills/ansible-principles
+rm -rf ~/.agents/skills/ansible-principles
+```
 
-1. **Check which files you're editing** — skills match on file extensions
-2. **Review the skill's trigger description:**
+## Migrating From Old Layouts
 
-   ```bash
-   grep "^description:" ~/.claude/skills/asciify-skills/*-principles.md
-   ```
+Older installs used grouped Claude paths such as `~/.claude/skills/asciify-skills/`. The installer removes those legacy grouped installs during uninstall and installs current skills directly under each agent's skills root.
 
-3. **Remove unwanted skills** — delete individual skill files you don't need:
-
-   ```bash
-   rm ~/.claude/skills/asciify-skills/ansible-principles.md
-   ```
-
----
-
-## Migrating from Agentic Principles
-
-If you previously used the `agentic-principles` package:
-
-1. **Uninstall cleans up automatically:**
-
-   ```bash
-   curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --uninstall
-   ```
-
-   This removes both `asciify-skills` and legacy `agentic-principles` installations, including old hooks and version files.
-
-2. **Install fresh:**
-
-   ```bash
-   curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --global
-   ```
-
----
+```bash
+curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --uninstall --agent both
+curl -sSL https://raw.githubusercontent.com/asciifylabs/asciify-skills/main/install.sh | bash -s -- --global --agent both
+```
 
 ## Still Having Issues?
 
-1. **Check system requirements:**
-   - Bash 3.2+
-   - curl
-   - Git (for local installs)
+Open an issue with:
 
-2. **Report an issue:**
-   - GitHub Issues: https://github.com/asciifylabs/asciify-skills/issues
-   - Include error messages and your OS version
+- operating system
+- agent used: Claude Code, Codex, or both
+- install command
+- relevant error output
+
+GitHub Issues: https://github.com/asciifylabs/asciify-skills/issues

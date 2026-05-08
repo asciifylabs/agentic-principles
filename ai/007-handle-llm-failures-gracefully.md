@@ -23,12 +23,12 @@ from functools import wraps
 # Bad: no error handling
 def ask(prompt):
     return client.messages.create(
-        model="claude-sonnet-4-5-20250929",
+        model="configured-default-model",
         messages=[{"role": "user", "content": prompt}],
     ).content[0].text
 
 # Good: retry with backoff and model fallback
-FALLBACK_MODELS = ["claude-sonnet-4-5-20250929", "claude-haiku-4-5-20251001"]
+FALLBACK_MODELS = ["configured-default-model", "configured-fast-model"]
 
 def ask_with_resilience(prompt: str, max_retries: int = 3) -> str:
     """Call LLM with retries, backoff, and model fallback."""

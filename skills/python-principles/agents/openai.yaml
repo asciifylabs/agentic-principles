@@ -1,0 +1,6 @@
+interface:
+  display_name: "Python Principles"
+  short_description: "Python code, packaging, and test standards"
+  default_prompt: "Use $python-principles to apply the relevant engineering standards to this task."
+policy:
+  allow_implicit_invocation: true

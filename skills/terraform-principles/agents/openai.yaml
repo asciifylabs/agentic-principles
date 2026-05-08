@@ -1,0 +1,6 @@
+interface:
+  display_name: "Terraform Principles"
+  short_description: "Terraform and OpenTofu IaC standards"
+  default_prompt: "Use $terraform-principles to apply the relevant engineering standards to this task."
+policy:
+  allow_implicit_invocation: true
